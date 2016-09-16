@@ -25,15 +25,16 @@ Iterate over, and collect all the data
 """
 data_d = {}
 
-snp_files = glob.glob(PATH_TO_INPUT_OPENSNP_DIRECTORY+"/splitconcatfiles/chrconcat*")
+snp_files = glob.glob(PATH_TO_INPUT_OPENSNP_DIRECTORY+"/splitconcatfiles/chrconcat*")[:100]
 
 def _process_file(_file):
 
 	print "Processing : ", _file
 	#return {'user-id-100': {'data' : [100]}}
 	user_ids = re.findall("chrconcat([\d]+)_([\d]+)", _file.split("/")[-1])
+	print _file, user_ids
 	assert len(user_ids) == 1 and len(user_ids[0]) == 2 and user_ids[0][0] == user_ids[0][1]
-	user_id = int(user_ids[0][0])
+	user_id = str(user_ids[0][0].strip())
 	
 	f = open(_file, "r")
 	lines = f.readlines()
@@ -106,9 +107,18 @@ if __name__ == '__main__':
 			break
 
 
-	train_d = dict(data_d.items()[int(len(snp_files)*1.0*TRAIN_PERCENT/100):])
-	test_d = dict(data_d.items()[:int(len(snp_files)*1.0*TRAIN_PERCENT/100)])
-	
+	#Split into train and test splits
+	train_d = {}
+	test_d = {}
+	_keys = data_d.keys()
+	for _key in _keys:
+		if random.randint(0, 1000)/10 <= TRAIN_PERCENT:
+			train_d[_key] = data_d[_key]
+		else:
+			test_d[_key] = data_d[_key]
+			
+	print train_d
+	print test_d
 
 	"""
 	Read other extra information from the height.tsv file
@@ -123,16 +133,33 @@ if __name__ == '__main__':
 
 	for _line in lines[1:]:
 		_line = _line.strip().split()
-		assert len(_line) == len(HEADERS)
-		#Make sure a corresponding data entry exists in the data dictionary
-		assert _line[id_index] in all_users
+		if len(_line) == len(HEADERS):
+			#Make sure a corresponding data entry exists in the data dictionary
+			if int(_line[id_index]) in all_users:
+				for _idx, _head in enumerate(HEADERS):
+					#A corresponding entry has to exist in either train_d or test_d
+					try:
+						print id_index
+						print _line[id_index]
+						print train_d[str(_line[id_index].strip())]
+						train_d[str(_line[id_index].strip())][_head] = _line[_idx]
+					except:
+						print id_index
+						print _line[id_index]
+						print test_d[str(_line[id_index].strip())]
+						test_d[str(_line[id_index].strip())][_head] = _line[_idx]
 
-		for _idx, _head in enumerate(HEADERS):
-			#A corresponding entry has to exist in either train_d or test_d
-			try:
-				train_d[int(_line[id_index])][_head] = _line[_idx]
-			except:
-				test_d[int(_line[id_index])][_head] = _line[_idx]
+	"""
+	Shuffle and write data to train/test files 
+	"""
+	print "Writing data to the output folder...."
+	def write_to_file(data, filename):
+		dd.io.save(filename, data)
+
+	write_to_file(train_d, PATH_TO_OUTPUT_DIRECTORY+"/train.h5")
+	write_to_file(test_d, PATH_TO_OUTPUT_DIRECTORY+"/test.h5")
+		
+
 
 	"""
 	Shuffle and write data to train/test files 
