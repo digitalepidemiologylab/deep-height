@@ -25,7 +25,7 @@ Iterate over, and collect all the data
 """
 data_d = {}
 
-snp_files = glob.glob(PATH_TO_INPUT_OPENSNP_DIRECTORY+"/splitconcatfiles/chrconcat*")[:100]
+snp_files = glob.glob(PATH_TO_INPUT_OPENSNP_DIRECTORY+"/splitconcatfiles/chrconcat*")
 def _process_file(_file):
 
 	print "Processing : ", _file
