@@ -25,16 +25,15 @@ Iterate over, and collect all the data
 """
 data_d = {}
 
-snp_files = glob.glob(PATH_TO_INPUT_OPENSNP_DIRECTORY+"/splitconcatfiles/chrconcat*")[:100]
-
+snp_files = glob.glob(PATH_TO_INPUT_OPENSNP_DIRECTORY+"/splitconcatfiles/chrconcat*")
 def _process_file(_file):
 
 	print "Processing : ", _file
 	#return {'user-id-100': {'data' : [100]}}
-	user_ids = re.findall("chrconcat([\d]+)_([\d]+)", _file.split("/")[-1])
+	user_ids = re.findall("chrconcat([\d]+)_([\d]+)\.txt", _file.split("/")[-1])
 	print _file, user_ids
 	assert len(user_ids) == 1 and len(user_ids[0]) == 2 and user_ids[0][0] == user_ids[0][1]
-	user_id = str(user_ids[0][0].strip())
+	user_id = int(user_ids[0][1].strip())
 	
 	f = open(_file, "r")
 	lines = f.readlines()
@@ -57,7 +56,8 @@ def _process_file(_file):
 
 	f.close()
 	data = np.array(data)
-	return {user_id: data}
+	data = data.reshape((1, len(data)))
+	return {user_id: {'data': data}}
 
 #Queue worker		
 def _worker(files, done_queue):
@@ -93,9 +93,9 @@ if __name__ == '__main__':
 	#	print "Stopping Process : ", p.name
 
 	# Collect all results into single results dict.
-	for _process_no in range(NUMBER_OF_PROCESSES):
+	for _file_no in range(len(snp_files)):
 		data_d.update(done_queue.get())
-		print "Obtained result from _process_no...", _process_no
+		print "Obtained result from file no...", _file_no
 
 	for _process in procs:
 		_process.terminate()
@@ -117,8 +117,8 @@ if __name__ == '__main__':
 		else:
 			test_d[_key] = data_d[_key]
 			
-	print train_d
-	print test_d
+	print "Number of Training Keys : ",len(train_d.keys())
+	print "Number of testing keys : ", len(test_d.keys())
 
 	"""
 	Read other extra information from the height.tsv file
@@ -129,7 +129,7 @@ if __name__ == '__main__':
 	HEADERS = lines[0].strip().split()
 	assert "ID" in HEADERS
 	id_index = HEADERS.index("ID")
-	all_users = set(train_d.keys() + test_d.keys())
+	all_users = data_d.keys()
 
 	for _line in lines[1:]:
 		_line = _line.strip().split()
@@ -138,16 +138,11 @@ if __name__ == '__main__':
 			if int(_line[id_index]) in all_users:
 				for _idx, _head in enumerate(HEADERS):
 					#A corresponding entry has to exist in either train_d or test_d
+						
 					try:
-						print id_index
-						print _line[id_index]
-						print train_d[str(_line[id_index].strip())]
-						train_d[str(_line[id_index].strip())][_head] = _line[_idx]
+						train_d[int(_line[id_index])][_head] = int(_line[_idx])
 					except:
-						print id_index
-						print _line[id_index]
-						print test_d[str(_line[id_index].strip())]
-						test_d[str(_line[id_index].strip())][_head] = _line[_idx]
+						test_d[int(_line[id_index])][_head] = int(_line[_idx])
 
 	"""
 	Shuffle and write data to train/test files 
