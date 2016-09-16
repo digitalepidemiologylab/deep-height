@@ -7,6 +7,8 @@ import random
 
 """
 ARGUMENTS
+
+TO-DO: use a proper argument parser for these 
 """
 PATH_TO_INPUT_OPENSNP_DIRECTORY = "/mount/SDG/splitconcatdataset-uncompressed/Genomic_data"
 PATH_TO_OUTPUT_DIRECTORY = "/mount/SDG/deep-height/opensnp_data"
