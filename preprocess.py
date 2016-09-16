@@ -106,8 +106,8 @@ if __name__ == '__main__':
 			break
 
 
-	train_d = dict(data_d.items()[int(len(opensnp_files)*1.0*TRAIN_PERCENTAGE/100):])
-	test_d = dict(data_d.items()[:int(len(opensnp_files)*1.0*TRAIN_PERCENTAGE/100)])
+	train_d = dict(data_d.items()[int(len(snp_files)*1.0*TRAIN_PERCENT/100):])
+	test_d = dict(data_d.items()[:int(len(snp_files)*1.0*TRAIN_PERCENT/100)])
 	
 
 	"""
