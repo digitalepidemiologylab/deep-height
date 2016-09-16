@@ -33,10 +33,13 @@ def _process_file(_file):
 	user_ids = re.findall("chrconcat([\d]+)_([\d]+)\.txt", _file.split("/")[-1])
 	print _file, user_ids
 	assert len(user_ids) == 1 and len(user_ids[0]) == 2 and user_ids[0][0] == user_ids[0][1]
-	user_id = int(user_ids[0][1].strip())
+	user_id = str(user_ids[0][1].strip())
 	
 	f = open(_file, "r")
 	lines = f.readlines()
+	"""
+	TO-DO: Make the assertion for expected number of lines configurable
+	"""
 	assert len(lines) == 9520940
 	data = []
 	for _line in lines:
@@ -51,8 +54,8 @@ def _process_file(_file):
 			Some thought could also go into how to better "organise" 
 			the data (or exploit some domain specific correlations between them).
 		"""
-		data.append(np.fromstring(_line[0], dtype=np.uint8))
-		data.append(np.fromstring(_line[1], dtype=np.uint8))
+		data.append(np.uint8(int(_line[0])))
+		data.append(np.uint8(int(_line[1])))
 
 	f.close()
 	data = np.array(data)
@@ -62,8 +65,17 @@ def _process_file(_file):
 #Queue worker		
 def _worker(files, done_queue):
 	for _file in files:
-		done_queue.put(_process_file(_file))
-		print "Done processing : ", _file
+		try:
+			done_queue.put(_process_file(_file))
+			print "Done processing : ", _file
+		except Exception, e:
+			print "ERROR processing : ", _file
+			f = open("ERROR", "a")
+			f.write(_file+"\n")
+			f.write(str(e) + "\n")
+			f.write("="*100+"\n")
+			f.close()
+			done_queue.put(False)
 	return	
 
 if __name__ == '__main__':
@@ -86,17 +98,26 @@ if __name__ == '__main__':
 	"""
 	This section needs some cleanup. A bit too hacky right now.
 	"""	
-	
+	#
 	# Wait for all worker processes to finish
-	#for p in procs:
+	# for p in procs:
 	#	p.join()
 	#	print "Stopping Process : ", p.name
 
 	# Collect all results into single results dict.
 	for _file_no in range(len(snp_files)):
-		data_d.update(done_queue.get())
-		print "Obtained result from file no...", _file_no
-
+		_result = done_queue.get()
+		if _result:
+			data_d.update(_result)
+			print "Obtained result from file no...", _file_no
+		else:
+			print "ERROR in a particular file"
+	#
+	# Ideally we shouldnt have manual termination of the processes
+	# But the darn processes simply wont terminate for reason with 
+	# p.join :'(
+	#
+	# TO-DO: Fix this
 	for _process in procs:
 		_process.terminate()
 	
@@ -135,14 +156,14 @@ if __name__ == '__main__':
 		_line = _line.strip().split()
 		if len(_line) == len(HEADERS):
 			#Make sure a corresponding data entry exists in the data dictionary
-			if int(_line[id_index]) in all_users:
+			if str(_line[id_index]) in all_users:
 				for _idx, _head in enumerate(HEADERS):
 					#A corresponding entry has to exist in either train_d or test_d
 						
 					try:
-						train_d[int(_line[id_index])][_head] = int(_line[_idx])
+						train_d[str(_line[id_index])][_head] = int(_line[_idx])
 					except:
-						test_d[int(_line[id_index])][_head] = int(_line[_idx])
+						test_d[str(_line[id_index])][_head] = int(_line[_idx])
 
 	"""
 	Shuffle and write data to train/test files 
