@@ -1,6 +1,6 @@
 # deep-height
 
-[http://radialdirect.com.au/tall-and-short-man-cartoon.jpg](http://radialdirect.com.au/tall-and-short-man-cartoon.jpg)
+![http://radialdirect.com.au/tall-and-short-man-cartoon.jpg](http://radialdirect.com.au/tall-and-short-man-cartoon.jpg)
 
 ##Usage:
 ```
