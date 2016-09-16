@@ -25,7 +25,7 @@ Iterate over, and collect all the data
 """
 data_d = {}
 
-snp_files = glob.glob(PATH_TO_INPUT_OPENSNP_DIRECTORY+"/splitconcatfiles/chrconcat*")
+snp_files = glob.glob(PATH_TO_INPUT_OPENSNP_DIRECTORY+"/splitconcatfiles/chrconcat*")[:100]
 def _process_file(_file):
 
 	print "Processing : ", _file
@@ -53,18 +53,40 @@ def _process_file(_file):
 			the data more efficiently.
 			Some thought could also go into how to better "organise" 
 			the data (or exploit some domain specific correlations between them).
+
+
+		Binary Mapping
+		0 -> 00
+		1 -> 01
+		2 -> 10
+		3 -> Does not exist (Yet ?)
 		"""
-		data.append(np.uint8(int(_line[0])))
-		data.append(np.uint8(int(_line[1])))
+		def encode_binary(k):
+			k = int(k)
+			if k == 0:
+				return [False, False]
+			elif k == 1:
+				return [False, True]
+			elif k == 2:
+				return [True, False]
+			else:
+				return None
+
+		data += encode_binary(_line[0]) #Store as Boolean values
+		data += encode_binary(_line[1])
 
 	f.close()
-	data = np.array(data)
-	data = data.reshape((1, len(data)))
+	"""
+	Pack Data
+	"""
 	return {user_id: {'data': data}}
 
 #Queue worker		
 def _worker(files, done_queue):
 	for _file in files:
+		done_queue.put(_process_file(_file))
+		print "Done processing : ", _file
+		"""
 		try:
 			done_queue.put(_process_file(_file))
 			print "Done processing : ", _file
@@ -76,6 +98,7 @@ def _worker(files, done_queue):
 			f.write("="*100+"\n")
 			f.close()
 			done_queue.put(False)
+		"""
 	return	
 
 if __name__ == '__main__':
