@@ -55,6 +55,14 @@ class DataSet:
 
 		end = self._index_in_epoch
 		return self._x[start:end], self._y[start:end]
+	
+	def save_small(self, target_filename, size):
+		_d = {'X': self._x[:size], 'Y': self._y[:size]}
+		dd.io.save(target_filename, _d)
 
-def load_data(foldername):
-	return (DataSet(foldername+"/train.h5"), DataSet(foldername+"/test.h5"))
+def load_data(foldername, small=False):
+	if not small:
+		return (DataSet(foldername+"/train.h5"), DataSet(foldername+"/test.h5"))
+	else:
+		return (DataSet(foldername+"/train-small.h5"), DataSet(foldername+"/test-small.h5"))
+
