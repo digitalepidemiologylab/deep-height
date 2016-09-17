@@ -4,6 +4,7 @@ import tensorflow as tf
 import numpy as np
 
 import open_snp_data
+import os
 
 LOG_DIR = "./logdir"
 
@@ -15,6 +16,7 @@ learning_rate = 0.001
 training_epochs = 100
 batch_size = 1
 display_step = 1
+checkpoint_step = 10
 
 n_hidden_1 = 10
 n_hidden_2 = 10
@@ -29,7 +31,7 @@ def multilayer_perceptron(x, weights, biases):
     # Hidden layer with RELU activation
     layer_1 = tf.add(tf.matmul(x, weights['h1']), biases['b1'])
     layer_1 = tf.nn.relu(layer_1)
-	
+
     # Create a summary to visualize the first layer ReLU activation
     tf.histogram_summary("relu1", layer_1)
 
@@ -80,12 +82,25 @@ for grad, var in grads:
 # Merge all summaries into a single op
 merged_summary_op = tf.merge_all_summaries()
 
-
-init = tf.initialize_all_variables()
+saver = tf.train.Saver()
 
 # Launch the graph
 with tf.Session() as sess:
-    sess.run(init)
+    ckpt = tf.train.get_checkpoint_state('checkpoints/')
+    if ckpt and ckpt.model_checkpoint_path:
+        # if checkpoint exists, restore the parameters and set epoch_n and i_iter
+        saver.restore(sess, ckpt.model_checkpoint_path)
+        epoch_n = int(ckpt.model_checkpoint_path.split('-')[1])
+        i_iter = (epoch_n+1) * (num_examples/batch_size)
+        print "Restored Epoch ", epoch_n
+    else:
+        # no checkpoint exists. create checkpoints directory if it does not exist.
+        if not os.path.exists('checkpoints'):
+            os.makedirs('checkpoints')
+
+        init = tf.initialize_all_variables()
+        sess.run(init)
+
     summary_writer = tf.train.SummaryWriter(LOG_DIR, tf.get_default_graph())
     
     # Training cycle
@@ -106,6 +121,10 @@ with tf.Session() as sess:
         if epoch % display_step == 0:
             print "Epoch:", '%04d' % (epoch+1), "cost=", \
                 "{:.9f}".format(avg_cost)
+        if epoch % checkpoint_step == 0:
+            print "Saving checkpoint...."
+            saver.save(sess, 'checkpoints/model.ckpt', epoch)
+
     print "Optimization Finished!"
 
 

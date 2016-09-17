@@ -4,3 +4,4 @@ ERROR
 *.pyc
 
 logdir*
+checkpoints
