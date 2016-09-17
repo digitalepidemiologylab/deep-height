@@ -8,19 +8,19 @@ import os
 
 LOG_DIR = "./logdir"
 
-train, test = open_snp_data.load_data("opensnp_data/", small=True)
+train, test = open_snp_data.load_data("opensnp_data/", small=False)
 
 input_dims = len(train.snps[0])
 
 learning_rate = 0.001
-training_epochs = 100
+training_epochs = 150
 batch_size = 1
 display_step = 1
 checkpoint_step = 10
 DETAILED_VISUALIZATION = False
 
-n_hidden_1 = 10
-n_hidden_2 = 10
+n_hidden_1 = 20
+n_hidden_2 = 20
 
 n_input = input_dims
 
