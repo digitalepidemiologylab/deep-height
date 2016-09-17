@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
 
-import open_snp
+import open_snp_data
 
-print open_snp.load_data("opensnp_data")
+print open_snp_data.load_data("opensnp_data")
