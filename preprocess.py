@@ -53,27 +53,8 @@ def _process_file(_file):
 			the data more efficiently.
 			Some thought could also go into how to better "organise" 
 			the data (or exploit some domain specific correlations between them).
-
-
-		Binary Mapping
-		0 -> 00
-		1 -> 01
-		2 -> 10
-		3 -> Does not exist (Yet ?)
 		"""
-		def encode_binary(k):
-			k = int(k)
-			if k == 0:
-				return [False, False]
-			elif k == 1:
-				return [False, True]
-			elif k == 2:
-				return [True, False]
-			else:
-				return None
-
-		data += encode_binary(_line[0]) #Store as Boolean values
-		data += encode_binary(_line[1])
+		data += [int(_line[0]), int(_line[1])]
 
 	f.close()
 	"""
@@ -84,9 +65,6 @@ def _process_file(_file):
 #Queue worker		
 def _worker(files, done_queue):
 	for _file in files:
-		done_queue.put(_process_file(_file))
-		print "Done processing : ", _file
-		"""
 		try:
 			done_queue.put(_process_file(_file))
 			print "Done processing : ", _file
@@ -98,7 +76,6 @@ def _worker(files, done_queue):
 			f.write("="*100+"\n")
 			f.close()
 			done_queue.put(False)
-		"""
 	return	
 
 if __name__ == '__main__':
@@ -173,41 +150,60 @@ if __name__ == '__main__':
 	HEADERS = lines[0].strip().split()
 	assert "ID" in HEADERS
 	id_index = HEADERS.index("ID")
-	all_users = data_d.keys()
+	height_index = HEADERS.index("HEIGHT")
+
+	all_users = train_d.keys() + test_d.keys()
+	
+	TRAIN_X = []
+	TRAIN_Y = []
+
+	TEST_X = []
+	TEST_Y = []
 
 	for _line in lines[1:]:
 		_line = _line.strip().split()
 		if len(_line) == len(HEADERS):
 			#Make sure a corresponding data entry exists in the data dictionary
 			if str(_line[id_index]) in all_users:
+				meta = []
 				for _idx, _head in enumerate(HEADERS):
 					#A corresponding entry has to exist in either train_d or test_d
-						
-					try:
-						train_d[str(_line[id_index])][_head] = int(_line[_idx])
-					except:
-						test_d[str(_line[id_index])][_head] = int(_line[_idx])
+					if _head == "HEIGHT" or _head == "ID":
+						continue
 
+					"""
+						Compute Approximate Age from the BORN age, 
+						mostly to fit the number in np.uint8
+					"""
+					if _head == "BORN":
+						_line[_idx] = 2016 - int(_line[_idx])
+
+					meta += [int(_line[_idx])]
+				
+				if str(_line[id_index]) in train_d.keys():
+					train_d[str(_line[id_index])]['data'] = meta + train_d[str(_line[id_index])]['data']
+					TRAIN_X.append(train_d[str(_line[id_index])]['data'])
+					TRAIN_Y.append(int(_line[height_index]))
+				elif str(_line[id_index]) in test_d.keys():
+					test_d[str(_line[id_index])]['data'] = meta + test_d[str(_line[id_index])]['data']
+					TEST_X.append(test_d[str(_line[id_index])]['data'])
+					TEST_Y.append(int(_line[height_index]))
+
+	print "Length TEST_X : ", len(TEST_X)
+	print "Length TEST_Y : ", len(TEST_Y)
+	print "Length TRAIN_X : ", len(TRAIN_X)
+	print "Length TRAIN_Y : ", len(TRAIN_Y)
+	
 	"""
 	Shuffle and write data to train/test files 
 	"""
 	print "Writing data to the output folder...."
-	def write_to_file(data, filename):
-		dd.io.save(filename, data)
+	dd.io.save(PATH_TO_OUTPUT_DIRECTORY+"/train.h5", {	'X': np.array(TRAIN_X, dtype=np.uint8),
+								'Y': np.array(TRAIN_Y, dtype=np.uint8)
+							})
 
-	write_to_file(train_d, PATH_TO_OUTPUT_DIRECTORY+"/train.h5")
-	write_to_file(test_d, PATH_TO_OUTPUT_DIRECTORY+"/test.h5")
-		
-
-
-	"""
-	Shuffle and write data to train/test files 
-	"""
-	print "Writing data to the output folder...."
-	def write_to_file(data, filename):
-		dd.io.save(filename, data)
-
-	write_to_file(train_d, PATH_TO_OUTPUT_DIRECTORY+"/train.h5")
-	write_to_file(test_d, PATH_TO_OUTPUT_DIRECTORY+"/test.h5")
+	dd.io.save(PATH_TO_OUTPUT_DIRECTORY+"/test.h5", {	'X': np.array(TEST_X, dtype=np.uint8),
+								'Y': np.array(TEST_Y, dtype=np.uint8)
+							})
 		
 
