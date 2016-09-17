@@ -23,9 +23,9 @@ W = tf.Variable(tf.zeros([batch_size, len(train.snps[0])]))
 b = tf.Variable(tf.zeros([batch_size]))
 
 # Construct model
-pred = tf.add(tf.matmul(x, tf.transpose(W)),  tf.transpose(b)) # Softmax
+pred = tf.add(tf.matmul(x, tf.transpose(W)),  tf.transpose(b)) 
 
-# Minimize error using cross entropy
+# Minimize error using Mean Squared Error
 cost = tf.reduce_sum(tf.pow(pred-y, 2))/(2*batch_size)
 
 # Gradient Descent
