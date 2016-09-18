@@ -96,20 +96,21 @@ with tf.Session() as sess:
         # if checkpoint exists, restore the parameters and set epoch_n and i_iter
         saver.restore(sess, ckpt.model_checkpoint_path)
         epoch_n = int(ckpt.model_checkpoint_path.split('-')[1])
-        i_iter = (epoch_n+1) * (num_examples/batch_size)
+        i_iter = (epoch_n+1) * (train.num_examples/batch_size)
         print "Restored Epoch ", epoch_n
     else:
         # no checkpoint exists. create checkpoints directory if it does not exist.
         if not os.path.exists('checkpoints'):
             os.makedirs('checkpoints')
 
+        epoch_n = 0
         init = tf.initialize_all_variables()
         sess.run(init)
 
     summary_writer = tf.train.SummaryWriter(LOG_DIR, tf.get_default_graph())
     
     # Training cycle
-    for epoch in range(training_epochs):
+    for epoch in range(epoch_n + 1, training_epochs):
         avg_cost = 0.
         total_batch = int(train.num_examples/batch_size)
         # Loop over all batches
