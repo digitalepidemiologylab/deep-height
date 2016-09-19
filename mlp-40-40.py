@@ -17,7 +17,7 @@ training_epochs = 60
 batch_size = 1
 display_step = 1
 checkpoint_step = 10
-DETAILED_VISUALIZATION = True
+DETAILED_VISUALIZATION = False
 
 n_hidden_1 = 40
 n_hidden_2 = 40
