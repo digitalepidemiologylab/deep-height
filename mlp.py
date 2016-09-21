@@ -31,19 +31,23 @@ y = tf.placeholder("float", [None])
 def multilayer_perceptron(x, weights, biases):
     # Hidden layer with RELU activation
     layer_1 = tf.add(tf.matmul(x, weights['h1']), biases['b1'])
-    layer_1 = tf.nn.relu(layer_1)
+    #layer_1 = tf.nn.relu(layer_1)
+    layer_1 = tf.nn.sigmoid(layer_1)
 
     if DETAILED_VISUALIZATION:
         # Create a summary to visualize the first layer ReLU activation
-        tf.histogram_summary("relu1", layer_1)
+        #tf.histogram_summary("relu1", layer_1)
+        tf.histogram_summary("sigmoid", layer_1)
 
     # Hidden layer with RELU activation
     layer_2 = tf.add(tf.matmul(layer_1, weights['h2']), biases['b2'])
-    layer_2 = tf.nn.relu(layer_2)
+    #layer_2 = tf.nn.relu(layer_2)
+    layer_2 = tf.nn.sigmoid(layer_2)
 
     if DETAILED_VISUALIZATION:
         # Create another summary to visualize the second layer ReLU activation
-        tf.histogram_summary("relu2", layer_2)
+        #tf.histogram_summary("relu2", layer_2)
+        tf.histogram_summary("sigmoid", layer_2)
     # Output layer with linear activation
     out_layer = tf.matmul(layer_2, weights['out']) + biases['out']
     return out_layer
