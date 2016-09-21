@@ -4,8 +4,8 @@ import numpy as np
 
 def extract_data(filename):
 	data = dd.io.load(filename)
-	X = data['X']
-	Y = data['Y']
+	X = data['X']/2
+	Y = data['Y']/2
 	return (X, Y)
 
 class DataSet:
