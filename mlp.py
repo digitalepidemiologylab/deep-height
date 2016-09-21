@@ -13,11 +13,11 @@ train, test = open_snp_data.load_data("opensnp_data/", small=False)
 input_dims = len(train.snps[0])
 
 learning_rate = 0.001
-training_epochs = 150
+training_epochs = 50
 batch_size = 1
 display_step = 1
 checkpoint_step = 10
-DETAILED_VISUALIZATION = False
+DETAILED_VISUALIZATION = True
 
 n_hidden_1 = 20
 n_hidden_2 = 20
@@ -37,7 +37,7 @@ def multilayer_perceptron(x, weights, biases):
     if DETAILED_VISUALIZATION:
         # Create a summary to visualize the first layer ReLU activation
         #tf.histogram_summary("relu1", layer_1)
-        tf.histogram_summary("sigmoid", layer_1)
+        tf.histogram_summary("sigmoid1", layer_1)
 
     # Hidden layer with RELU activation
     layer_2 = tf.add(tf.matmul(layer_1, weights['h2']), biases['b2'])
@@ -47,7 +47,7 @@ def multilayer_perceptron(x, weights, biases):
     if DETAILED_VISUALIZATION:
         # Create another summary to visualize the second layer ReLU activation
         #tf.histogram_summary("relu2", layer_2)
-        tf.histogram_summary("sigmoid", layer_2)
+        tf.histogram_summary("sigmoid2", layer_2)
     # Output layer with linear activation
     out_layer = tf.matmul(layer_2, weights['out']) + biases['out']
     return out_layer
