@@ -111,7 +111,8 @@ with tf.Session() as sess:
 
     #summary_writer = tf.train.SummaryWriter(LOG_DIR, tf.get_default_graph())
     total_batch = int(train.num_examples/batch_size)
-    avg_cost = 0 
+    avg_cost = 0
+    count = 0   
     for i in range(total_batch):
         batch_x, batch_y = train.next_batch(batch_size)
         batch_x = batch_x[::-1]
@@ -119,7 +120,8 @@ with tf.Session() as sess:
 
         _cost, prediction = sess.run([cost, pred], feed_dict = {x: batch_x, y: batch_y})
         print prediction, batch_y
-        avg_cost += _cost/train.num_examples
+        count += 1
+        avg_cost += _cost/count
         print _cost, avg_cost
         print "="*100
 
