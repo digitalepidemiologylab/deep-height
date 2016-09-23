@@ -9,7 +9,7 @@ import random
 
 LOG_DIR = "./logdir"
 
-train, test = open_snp_data.load_data("opensnp_data/", small=True)
+train, test = open_snp_data.load_data("opensnp_data/", small=False)
 
 TEST_ON = test
 
@@ -34,19 +34,19 @@ y = tf.placeholder("float", [None])
 def multilayer_perceptron(x, weights, biases):
     # Hidden layer with RELU activation
     layer_1 = tf.add(tf.matmul(x, weights['h1']), biases['b1'])
-    layer_1 = tf.nn.relu(layer_1)
+    layer_1 = tf.nn.sigmoid(layer_1)
 
     if DETAILED_VISUALIZATION:
-        # Create a summary to visualize the first layer ReLU activation
-        tf.histogram_summary("relu1", layer_1)
+        # Create a summary to visualize the first layer Sigmoid activation
+        tf.histogram_summary("sigmoid1", layer_1)
 
     # Hidden layer with RELU activation
     layer_2 = tf.add(tf.matmul(layer_1, weights['h2']), biases['b2'])
-    layer_2 = tf.nn.relu(layer_2)
+    layer_2 = tf.nn.sigmoid(layer_2)
 
     if DETAILED_VISUALIZATION:
-        # Create another summary to visualize the second layer ReLU activation
-        tf.histogram_summary("relu2", layer_2)
+        # Create another summary to visualize the second layer Sigmoid activation
+        tf.histogram_summary("sigmoid2", layer_2)
     # Output layer with linear activation
     out_layer = tf.matmul(layer_2, weights['out']) + biases['out']
     return out_layer
@@ -121,10 +121,8 @@ with tf.Session() as sess:
         batch_y = batch_y
 
         _cost, prediction = sess.run([cost, pred], feed_dict = {x: batch_x, y: batch_y})
-        print prediction, batch_y
+        print prediction*2, batch_y*2
         count += 1
         avg_cost += _cost/count
         print _cost, avg_cost
         print "="*100
-
-
