@@ -5,3 +5,5 @@ ERROR
 
 logdir*
 checkpoints
+
+*.png
