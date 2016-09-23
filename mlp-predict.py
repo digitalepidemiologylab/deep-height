@@ -9,7 +9,7 @@ import random
 
 LOG_DIR = "./logdir"
 
-train, test = open_snp_data.load_data("opensnp_data/", small=False)
+train, test = open_snp_data.load_data("opensnp_data/", small=True)
 
 input_dims = len(train.snps[0])
 
