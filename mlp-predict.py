@@ -115,8 +115,8 @@ with tf.Session() as sess:
     count = 0   
     for i in range(total_batch):
         batch_x, batch_y = train.next_batch(batch_size)
-        batch_x = batch_x[::-1]
-        batch_y = batch_y[::-1]
+        batch_x = batch_x
+        batch_y = batch_y
 
         _cost, prediction = sess.run([cost, pred], feed_dict = {x: batch_x, y: batch_y})
         print prediction, batch_y
