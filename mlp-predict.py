@@ -2,6 +2,8 @@
 
 import tensorflow as tf
 import numpy as np
+import matplotlib as plt
+import seaborn as sns
 
 import open_snp_data
 import os
@@ -9,9 +11,9 @@ import random
 
 LOG_DIR = "./logdir"
 
-train, test = open_snp_data.load_data("opensnp_data/", small=False)
+train, test = open_snp_data.load_data("opensnp_data/", small=True)
 
-TEST_ON = test
+TEST_ON = train
 
 input_dims = len(train.snps[0])
 
@@ -111,18 +113,40 @@ with tf.Session() as sess:
         init = tf.initialize_all_variables()
         sess.run(init)
     
-    #summary_writer = tf.train.SummaryWriter(LOG_DIR, tf.get_default_graph())
-    total_batch = int(TEST_ON.num_examples/batch_size)
-    avg_cost = 0
-    count = 0   
-    for i in range(total_batch):
-        batch_x, batch_y = TEST_ON.next_batch(batch_size)
-        batch_x = batch_x
-        batch_y = batch_y
+    DATASETS = [train, test]
+    for TEST_ON in DATASETS: 
+        #summary_writer = tf.train.SummaryWriter(LOG_DIR, tf.get_default_graph())
+        total_batch = int(TEST_ON.num_examples/batch_size)
+        avg_cost = 0
+        count = 0  
+        predictions = []
+        heights = [] 
+        for i in range(total_batch):
+            batch_x, batch_y = TEST_ON.next_batch(batch_size)
+            batch_x = batch_x
+            batch_y = batch_y
 
-        _cost, prediction = sess.run([cost, pred], feed_dict = {x: batch_x, y: batch_y})
-        print prediction*2, batch_y*2
-        count += 1
-        avg_cost += _cost/count
-        print _cost, avg_cost
-        print "="*100
+            _cost, prediction = sess.run([cost, pred], feed_dict = {x: batch_x, y: batch_y})
+            print prediction*2, batch_y*2
+            predictions.append(prediction[0]*2)
+            heights.append(batch_y[0]*2)
+            count += 1
+            avg_cost += _cost/count
+            print _cost, avg_cost
+            print "="*100
+        print "Plotting graph..."
+        X_min = np.amin(heights, axis=0) - 10
+        X_max = np.amax(heights, axis=0) + 10
+        
+        Y_min = np.amin(predictions, axis=0) - 10
+        Y_max = np.amin(predictions, axis=0) + 10
+
+        plt.clf() 
+        plt.plot([x_min, y_min], [x_max, y_max], 'r-')
+
+        plt.pyplot.scatter(heights, predictions)
+        if TEST_ON == train:
+            plt.savefig("train.png")
+        else:
+            plt.savefig("test.png")
+         
