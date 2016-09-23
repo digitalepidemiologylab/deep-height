@@ -11,6 +11,8 @@ LOG_DIR = "./logdir"
 
 train, test = open_snp_data.load_data("opensnp_data/", small=True)
 
+TEST_ON = test
+
 input_dims = len(train.snps[0])
 
 learning_rate = 0.001
@@ -108,13 +110,13 @@ with tf.Session() as sess:
         epoch_n = 0
         init = tf.initialize_all_variables()
         sess.run(init)
-
+    
     #summary_writer = tf.train.SummaryWriter(LOG_DIR, tf.get_default_graph())
-    total_batch = int(train.num_examples/batch_size)
+    total_batch = int(TEST_ON.num_examples/batch_size)
     avg_cost = 0
     count = 0   
     for i in range(total_batch):
-        batch_x, batch_y = train.next_batch(batch_size)
+        batch_x, batch_y = TEST_ON.next_batch(batch_size)
         batch_x = batch_x
         batch_y = batch_y
 
