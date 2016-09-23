@@ -2,7 +2,9 @@
 
 import tensorflow as tf
 import numpy as np
-import matplotlib as plt
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.pyplot as plt
 import seaborn as sns
 
 import open_snp_data
@@ -11,7 +13,7 @@ import random
 
 LOG_DIR = "./logdir"
 
-train, test = open_snp_data.load_data("opensnp_data/", small=True)
+train, test = open_snp_data.load_data("opensnp_data/", small=False)
 
 TEST_ON = train
 
@@ -127,24 +129,26 @@ with tf.Session() as sess:
             batch_y = batch_y
 
             _cost, prediction = sess.run([cost, pred], feed_dict = {x: batch_x, y: batch_y})
-            print prediction*2, batch_y*2
-            predictions.append(prediction[0]*2)
+            predictions.append(prediction[0][0]*2)
             heights.append(batch_y[0]*2)
+            print predictions[-1], heights[-1]
             count += 1
             avg_cost += _cost/count
             print _cost, avg_cost
             print "="*100
         print "Plotting graph..."
-        X_min = np.amin(heights, axis=0) - 10
-        X_max = np.amax(heights, axis=0) + 10
+        x_min = np.amin(heights, axis=0) - 10
+        x_max = np.amax(heights, axis=0) + 10
         
-        Y_min = np.amin(predictions, axis=0) - 10
-        Y_max = np.amin(predictions, axis=0) + 10
+        y_min = np.amin(predictions, axis=0) - 10
+        y_max = np.amin(predictions, axis=0) + 10
 
         plt.clf() 
-        plt.plot([x_min, y_min], [x_max, y_max], 'r-')
+        #plt.plot([x_min, y_min], [x_max, y_max], 'r-')
 
-        plt.pyplot.scatter(heights, predictions)
+        plt.scatter(heights, predictions)
+        plt.xlabel("Actual Heights")
+        plt.ylabel("Predicted Heights")
         if TEST_ON == train:
             plt.savefig("train.png")
         else:
