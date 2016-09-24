@@ -4,6 +4,6 @@ ERROR
 *.pyc
 
 logdir*
-checkpoints
+checkpoints*
 
 *.png
