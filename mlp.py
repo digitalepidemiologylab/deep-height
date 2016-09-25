@@ -8,7 +8,7 @@ import os
 
 LOG_DIR = "./logdir"
 
-train, test = open_snp_data.load_data("opensnp_data/", small=False)
+train, test = open_snp_data.load_data("opensnp_data/", small=False, include_metadata=False)
 
 input_dims = len(train.snps[0])
 

@@ -13,7 +13,7 @@ import random
 
 LOG_DIR = "./logdir"
 
-train, test = open_snp_data.load_data("opensnp_data/", small=False)
+train, test = open_snp_data.load_data("opensnp_data/", small=False, include_metadata=False)
 
 TEST_ON = train
 

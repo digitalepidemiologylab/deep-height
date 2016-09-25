@@ -2,16 +2,19 @@
 import deepdish as dd
 import numpy as np
 
-def extract_data(filename):
-	data = dd.io.load(filename)
-	X = data['X']/2
-	Y = data['Y']/2
-	return (X, Y)
+def extract_data(filename, include_metadata = True):
+    data = dd.io.load(filename)
+    if include_metadata:
+        X = data['X']/2
+    else:
+        X = data['X'][0:,3:]/2
+    Y = data['Y']/2
+    return (X, Y)
 
 class DataSet:
-	def __init__(self, filename):
+	def __init__(self, filename, include_metadata=True):
 		print "Loading data from : ", filename
-		self._x, self._y = extract_data(filename)
+		self._x, self._y = extract_data(filename, include_metadata)
 		self._epochs_completed = 0
 		self._index_in_epoch = 0
 	
@@ -60,9 +63,9 @@ class DataSet:
 		_d = {'X': self._x[:size], 'Y': self._y[:size]}
 		dd.io.save(target_filename, _d)
 
-def load_data(foldername, small=False):
+def load_data(foldername, small=False, include_metadata=True):
 	if not small:
-		return (DataSet(foldername+"/train.h5"), DataSet(foldername+"/test.h5"))
+		return (DataSet(foldername+"/train.h5", include_metadata), DataSet(foldername+"/test.h5", include_metadata))
 	else:
-		return (DataSet(foldername+"/train-small.h5"), DataSet(foldername+"/test-small.h5"))
+		return (DataSet(foldername+"/train-small.h5", include_metadata), DataSet(foldername+"/test-small.h5", include_metadata))
 
