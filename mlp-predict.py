@@ -13,7 +13,7 @@ import random
 
 LOG_DIR = "./logdir"
 
-train, test = open_snp_data.load_data("opensnp_data/", small=False, include_metadata=False)
+train, test = open_snp_data.load_data("opensnp_data/", small=False, include_metadata=True)
 
 TEST_ON = train
 
@@ -99,7 +99,7 @@ saver = tf.train.Saver()
 # Launch the graph
 with tf.Session() as sess:
     ckpt = tf.train.get_checkpoint_state('checkpoints/')
-    #ckpt.model_checkpoint_path = "checkpoints/model.ckpt-20"
+    ckpt.model_checkpoint_path = "checkpoints/model.ckpt-15"
     if ckpt and ckpt.model_checkpoint_path:
         # if checkpoint exists, restore the parameters and set epoch_n and i_iter
         saver.restore(sess, ckpt.model_checkpoint_path)
@@ -123,6 +123,12 @@ with tf.Session() as sess:
         count = 0  
         predictions = []
         heights = [] 
+
+        blue_predictions = []
+        blue_heights = []
+
+        red_predictions = []
+        red_heights = []
         for i in range(total_batch):
             batch_x, batch_y = TEST_ON.next_batch(batch_size)
             batch_x = batch_x
@@ -131,6 +137,14 @@ with tf.Session() as sess:
             _cost, prediction = sess.run([cost, pred], feed_dict = {x: batch_x, y: batch_y})
             predictions.append(prediction[0][0]*2)
             heights.append(batch_y[0]*2)
+
+            if batch_x[0][1]%2 == 0:
+                blue_predictions.append(prediction[0][0]*2)
+                blue_heights.append(batch_y[0]*2)
+            else:
+                red_predictions.append(prediction[0][0]*2)
+                red_heights.append(batch_y[0]*2)
+
             print predictions[-1], heights[-1]
             count += 1
             avg_cost += _cost/count
@@ -146,7 +160,9 @@ with tf.Session() as sess:
         plt.clf() 
         #plt.plot([x_min, y_min], [x_max, y_max], 'r-')
 
-        plt.scatter(heights, predictions)
+        #plt.scatter(heights, predictions)
+        plt.scatter(blue_heights, blue_predictions, color='b')
+        plt.scatter(red_heights, red_predictions, color='r')
         plt.xlabel("Actual Heights")
         plt.ylabel("Predicted Heights")
         if TEST_ON == train:
