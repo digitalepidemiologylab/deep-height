@@ -206,7 +206,7 @@ with tf.Session(config=config) as sess:
             # Compute average loss
             avg_cost += c / total_batch
 
-    print "epoch : ", epoch, "avg_cost : ", avg_cost
+        print "epoch : ", epoch, "avg_cost : ", avg_cost
     if epoch % checkpoint_step == 0 :
         print "Saving checkpoint...."
         saver.save(sess, CHECKPOINTS + '/model.ckpt', epoch)
