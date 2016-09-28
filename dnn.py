@@ -10,7 +10,7 @@ import os
 
 import open_snp_data
 
-train, test = open_snp_data.load_data("opensnp_data/", small=True)
+train, test = open_snp_data.load_data("opensnp_data/", small=False)
 
 input_dims = len(train.snps[0])
 
@@ -26,6 +26,7 @@ filt_1 = [30, 1000, 10]  #Configuration for conv1 in [num_filt,kern_size,pool_st
 filt_2 = [12, 1000, 10]
 
 num_fc_1 = 30
+num_fc_2 = 30
 
 learning_rate = 1e-2
 
@@ -100,20 +101,26 @@ with tf.name_scope("Fully_Connected1") as scope:
 # Hence we use "width_pool2*filt_2[0]" i this first line
   W_fc1 = weight_variable([width_pool2*filt_2[0], num_fc_1], 'Fully_Connected_layer_1')
   b_fc1 = bias_variable([num_fc_1], 'bias_for_Fully_Connected_Layer_1')
-  with tf.device("/cpu:0"):
-      h_flat = tf.reshape(h_bn1, [-1, width_pool2*filt_2[0]])
+  h_flat = tf.reshape(h_bn1, [-1, width_pool2*filt_2[0]])
   h_flat = tf.nn.dropout(h_flat,keep_prob)
   h_fc1 = tf.nn.relu(tf.matmul(h_flat, W_fc1) + b_fc1)
 
-with tf.name_scope("Output_layer") as scope:
+with tf.name_scope("Fully_Connected2") as scope:
     h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
-    W_fc2 = tf.Variable(tf.truncated_normal([num_fc_1, batch_size], stddev=0.1),name = 'W_fc2')
-    b_fc2 = tf.Variable(tf.constant(0.1, shape=[batch_size]),name = 'b_fc2')
+    W_fc2 = tf.Variable(tf.truncated_normal([num_fc_1, num_fc_2], stddev=0.1),name = 'W_fc2')
+    b_fc2 = tf.Variable(tf.constant(0.1, shape=[num_fc_2]),name = 'b_fc2')
     h_fc2 = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
     size3 = tf.shape(h_fc2)       #Debugging purposes
 
+with tf.name_scope("Output_layer") as scope:
+    h_fc2_drop = tf.nn.dropout(h_fc2, keep_prob)
+    W_fc3 = tf.Variable(tf.truncated_normal([num_fc_2, batch_size], stddev=0.1),name = 'W_fc3')
+    b_fc3 = tf.Variable(tf.constant(0.1, shape=[batch_size]),name = 'b_fc3')
+    h_fc3 = tf.matmul(h_fc2_drop, W_fc3) + b_fc3
+    size3 = tf.shape(h_fc3)       #Debugging purposes
+
 with tf.name_scope("Loss"):
-    cost = tf.reduce_sum(tf.pow(h_fc2-y_, 2))/(2*batch_size)
+    cost = tf.reduce_sum(tf.pow(h_fc3-y_, 2))/(2*batch_size)
 
 with tf.name_scope("train") as scope:
     tvars = tf.trainable_variables()
