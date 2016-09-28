@@ -10,7 +10,7 @@ import os
 
 import open_snp_data
 
-train, test = open_snp_data.load_data("opensnp_data/", small=False)
+train, test = open_snp_data.load_data("opensnp_data/", small=True)
 
 input_dims = len(train.snps[0])
 
@@ -20,13 +20,15 @@ Hyperparameters
 training_epochs = 100
 batch_size = 1
 
-dropout = 0.9
+dropout = 1
 
 filt_1 = [50, 1000, 10]  #Configuration for conv1 in [num_filt,kern_size,pool_stride]
 filt_2 = [30, 1000, 10]
+filt_3 = [30, 1000, 10]
+filt_4 = [30, 1000, 10]
 
-num_fc_1 = 30
-num_fc_2 = 30
+num_fc_1 = 100
+num_fc_2 = 100
 
 learning_rate = 1e-2
 
@@ -89,8 +91,36 @@ with tf.name_scope('max_pool2') as scope:
     width_pool2 = int(np.floor((width_pool1-filt_2[2])/filt_2[2]))+1
     size2 = tf.shape(h_pool2)       #Debugging purposes
 
+with tf.name_scope("Conv3") as scope:
+  W_conv3 = weight_variable([filt_3[1], 1, filt_2[0], filt_3[0]], 'Conv_Layer_3')
+  b_conv3 = bias_variable([filt_3[0]], 'bias_for_Conv_Layer_3')
+  a_conv3 = conv2d(h_pool2, W_conv3) + b_conv3
+  h_conv3 = a_conv3
+  h_conv3 = tf.nn.tanh(a_conv3)
+
+with tf.name_scope('max_pool3') as scope:
+    h_pool3 = tf.nn.max_pool(h_conv3, ksize=[1, filt_3[2], 1, 1],
+                        strides=[1, filt_3[2], 1, 1], padding='VALID')
+                        #width is now (128-4)/2+1
+    width_pool3 = int(np.floor((width_pool2-filt_3[2])/filt_3[2]))+1
+    size3 = tf.shape(h_pool3)       #Debugging purposes
+
+with tf.name_scope("Conv4") as scope:
+  W_conv4 = weight_variable([filt_4[1], 1, filt_3[0], filt_4[0]], 'Conv_Layer_4')
+  b_conv4 = bias_variable([filt_4[0]], 'bias_for_Conv_Layer_4')
+  a_conv4 = conv2d(h_pool3, W_conv4) + b_conv4
+  h_conv4 = a_conv4
+  h_conv4 = tf.nn.tanh(a_conv4)
+
+with tf.name_scope('max_pool4') as scope:
+    h_pool4 = tf.nn.max_pool(h_conv4, ksize=[1, filt_4[2], 1, 1],
+                        strides=[1, filt_4[2], 1, 1], padding='VALID')
+                        #width is now (128-4)/2+1
+    width_pool4 = int(np.floor((width_pool3-filt_4[2])/filt_4[2]))+1
+    size4 = tf.shape(h_pool4)       #Debugging purposes
+
 with tf.name_scope('Batch_norm1') as scope:
-    a_bn1 = batch_norm(h_pool2,filt_2[0],bn_train,'bn2')
+    a_bn1 = batch_norm(h_pool4,filt_4[0],bn_train,'bn2')
     h_bn1 = tf.nn.tanh(a_bn1)
 
 
@@ -99,9 +129,9 @@ with tf.name_scope("Fully_Connected1") as scope:
 # both activations over all channels into one 1D tensor per sample.
 # We have "filt_2[0]" channels and "width_pool2" activations per channel.
 # Hence we use "width_pool2*filt_2[0]" i this first line
-  W_fc1 = weight_variable([width_pool2*filt_2[0], num_fc_1], 'Fully_Connected_layer_1')
+  W_fc1 = weight_variable([width_pool4*filt_4[0], num_fc_1], 'Fully_Connected_layer_1')
   b_fc1 = bias_variable([num_fc_1], 'bias_for_Fully_Connected_Layer_1')
-  h_flat = tf.reshape(h_bn1, [-1, width_pool2*filt_2[0]])
+  h_flat = tf.reshape(h_bn1, [-1, width_pool4*filt_4[0]])
   h_flat = tf.nn.dropout(h_flat,keep_prob)
   h_fc1 = tf.nn.tanh(tf.matmul(h_flat, W_fc1) + b_fc1)
 
