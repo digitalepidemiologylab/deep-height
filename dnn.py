@@ -20,10 +20,10 @@ Hyperparameters
 training_epochs = 100
 batch_size = 1
 
-dropout = 1
+dropout = 0.9
 
-filt_1 = [30, 1000, 10]  #Configuration for conv1 in [num_filt,kern_size,pool_stride]
-filt_2 = [12, 1000, 10]
+filt_1 = [50, 1000, 10]  #Configuration for conv1 in [num_filt,kern_size,pool_stride]
+filt_2 = [30, 1000, 10]
 
 num_fc_1 = 30
 num_fc_2 = 30
@@ -64,7 +64,7 @@ with tf.name_scope("Conv1") as scope:
   W_conv1 = weight_variable([filt_1[1], 1, 1, filt_1[0]], 'Conv_Layer_1')
   b_conv1 = bias_variable([filt_1[0]], 'bias_for_Conv_Layer_1')
   a_conv1 = conv2d(x_image, W_conv1) + b_conv1
-  h_conv1 = tf.nn.relu(a_conv1)
+  h_conv1 = tf.nn.tanh(a_conv1)
 
 
 with tf.name_scope('max_pool1') as scope:
@@ -80,7 +80,7 @@ with tf.name_scope("Conv2") as scope:
   b_conv2 = bias_variable([filt_2[0]], 'bias_for_Conv_Layer_2')
   a_conv2 = conv2d(h_pool1, W_conv2) + b_conv2
   h_conv2 = a_conv2
- # h_conv2 = tf.nn.relu(a_conv2) #ReLU after batchnorm
+  h_conv2 = tf.nn.tanh(a_conv2)
 
 with tf.name_scope('max_pool2') as scope:
     h_pool2 = tf.nn.max_pool(h_conv2, ksize=[1, filt_2[2], 1, 1],
@@ -91,7 +91,7 @@ with tf.name_scope('max_pool2') as scope:
 
 with tf.name_scope('Batch_norm1') as scope:
     a_bn1 = batch_norm(h_pool2,filt_2[0],bn_train,'bn2')
-    h_bn1 = tf.nn.relu(a_bn1)
+    h_bn1 = tf.nn.tanh(a_bn1)
 
 
 with tf.name_scope("Fully_Connected1") as scope:
@@ -103,7 +103,7 @@ with tf.name_scope("Fully_Connected1") as scope:
   b_fc1 = bias_variable([num_fc_1], 'bias_for_Fully_Connected_Layer_1')
   h_flat = tf.reshape(h_bn1, [-1, width_pool2*filt_2[0]])
   h_flat = tf.nn.dropout(h_flat,keep_prob)
-  h_fc1 = tf.nn.relu(tf.matmul(h_flat, W_fc1) + b_fc1)
+  h_fc1 = tf.nn.tanh(tf.matmul(h_flat, W_fc1) + b_fc1)
 
 with tf.name_scope("Fully_Connected2") as scope:
     h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
