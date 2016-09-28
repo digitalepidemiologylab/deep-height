@@ -144,8 +144,8 @@ with tf.name_scope("train") as scope:
 # Create a summary to monitor cost tensor
 tf.scalar_summary("loss", cost)
 merged_summary_op = tf.merge_all_summaries()
-
-with tf.Session(config=tf.ConfigProto(log_device_placement=True, allow_soft_placement=True)) as sess:
+config=tf.ConfigProto(log_device_placement=True, allow_soft_placement=True)
+with tf.Session(config=config) as sess:
     ckpt = tf.train.get_checkpoint_state(CHECKPOINTS)
     if ckpt and ckpt.model_checkpoint_path:
         saver.restore(sess, ckpt.model_checkpoint_path)
