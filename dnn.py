@@ -10,14 +10,14 @@ import os
 
 import open_snp_data
 
-train, test = open_snp_data.load_data("opensnp_data/", small=True)
+train, test = open_snp_data.load_data("opensnp_data/", small=False)
 
 input_dims = len(train.snps[0])
 
 """
 Hyperparameters
 """
-training_epochs = 100
+training_epochs = 150
 batch_size = 1
 
 dropout = 1
