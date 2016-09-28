@@ -28,7 +28,7 @@ filt_3 = [30, 1000, 10]
 filt_4 = [30, 1000, 10]
 
 num_fc_1 = 1000
-num_fc_2 = 100
+num_fc_2 = 1000
 
 learning_rate = 1e-2
 
