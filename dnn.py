@@ -11,7 +11,7 @@ import os
 import open_snp_data
 LOG_Y = True
 
-train, test = open_snp_data.load_data("opensnp_data/", small=True, log_y=LOG_Y)
+train, test = open_snp_data.load_data("opensnp_data/", small=False, log_y=LOG_Y)
 
 input_dims = len(train.snps[0])
 
