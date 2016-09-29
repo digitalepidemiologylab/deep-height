@@ -8,7 +8,8 @@ def extract_data(filename, include_metadata = True):
         X = data['X']/2
     else:
         X = data['X'][0:,3:]/2
-    Y = np.log(data['Y'])
+    # Y = np.log(data['Y'])
+    Y = data['Y']
     return (X, Y)
 
 class DataSet:
