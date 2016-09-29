@@ -208,7 +208,7 @@ with tf.Session(config=config) as sess:
             writer.add_summary(summary, epoch * total_batch + i)
             # Compute average loss
             avg_cost += c / total_batch
-            print "Prediction : ",predictions
+            print "Prediction : ",predictions, np.exp(predictions)
 
         print "epoch : ", epoch, "avg_cost : ", avg_cost
         # if epoch % checkpoint_step == 0 :
