@@ -20,17 +20,17 @@ Hyperparameters
 training_epochs = 150
 batch_size = 1
 
-dropout = 0.5
+dropout = 1
 
-filt_1 = [50, 100, 5]  #Configuration for conv1 in [num_filt,kern_size,pool_stride]
-filt_2 = [30, 100, 5]
-filt_3 = [30, 100, 5]
-filt_4 = [30, 100, 5]
+filt_1 = [60, 500, 10]  #Configuration for conv1 in [num_filt,kern_size,pool_stride]
+filt_2 = [30, 500, 10]
+filt_3 = [30, 500, 10]
+filt_4 = [30, 500, 10]
 
 num_fc_1 = 1000
 num_fc_2 = 1000
 
-learning_rate = 1e-2
+learning_rate = 1e-1
 
 checkpoint_step = 5
 LOGDIR = "logdir_conv"
@@ -159,17 +159,17 @@ with tf.name_scope("train") as scope:
 
     gradients = zip(grads, tvars)
 
-    numel = tf.constant([[0]])
-    for gradient, variable in gradients:
-        if isinstance(gradient, ops.IndexedSlices):
-            grad_values = gradient.values
-        else:
-            grad_values = gradient
-        numel +=tf.reduce_sum(tf.size(variable))
-
-    h1 = tf.histogram_summary(variable.name, variable)
-    h2 = tf.histogram_summary(variable.name + "/gradients", grad_values)
-    h3 = tf.histogram_summary(variable.name + "/gradient_norm", clip_ops.global_norm([grad_values]))
+    # numel = tf.constant([[0]])
+    # for gradient, variable in gradients:
+    #     if isinstance(gradient, ops.IndexedSlices):
+    #         grad_values = gradient.values
+    #     else:
+    #         grad_values = gradient
+    #     numel +=tf.reduce_sum(tf.size(variable))
+    #
+    #     h1 = tf.histogram_summary(variable.name, variable)
+    #     h2 = tf.histogram_summary(variable.name + "/gradients", grad_values)
+    #     h3 = tf.histogram_summary(variable.name + "/gradient_norm", clip_ops.global_norm([grad_values]))
 
 # Create a summary to monitor cost tensor
 tf.scalar_summary("loss", cost)
@@ -202,12 +202,13 @@ with tf.Session(config=config) as sess:
         for i in range(total_batch):
             batch_x, batch_y = train.next_batch(batch_size)
             # Run optimization op (backprop) and cost op (to get loss value)
-            c, summary = sess.run(   [cost, merged_summary_op],
+            c, summary, predictions = sess.run(   [cost, merged_summary_op, h_fc3],
                                         feed_dict={x: batch_x, y_: batch_y, bn_train: True, keep_prob: dropout}
                                     )
             writer.add_summary(summary, epoch * total_batch + i)
             # Compute average loss
             avg_cost += c / total_batch
+            print "Prediction : ",predictions
 
         print "epoch : ", epoch, "avg_cost : ", avg_cost
         # if epoch % checkpoint_step == 0 :
