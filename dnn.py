@@ -9,9 +9,9 @@ from bnf import *
 import os
 
 import open_snp_data
-LOG_Y = False
+LOG_Y = True
 
-train, test = open_snp_data.load_data("opensnp_data/", small=False, log_y=LOG_Y)
+train, test = open_snp_data.load_data("opensnp_data/", small=True, log_y=LOG_Y)
 
 input_dims = len(train.snps[0])
 
@@ -32,8 +32,12 @@ num_fc_2 = 200
 learning_rate = 1e-2
 
 checkpoint_step = 5
-LOGDIR = "logdir_conv"
-CHECKPOINTS = "checkpoints_conv"
+if LOG_Y:
+    LOGDIR = "logdir_conv_logy"
+    CHECKPOINTS = "checkpoints_conv_logy"
+else:
+    LOGDIR = "logdir_conv"
+    CHECKPOINTS = "checkpoints_conv"
 
 x = tf.placeholder("float", shape=[None, input_dims], name = 'Input_data')
 y_ = tf.placeholder("float", shape=[None], name = 'height')
