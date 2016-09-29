@@ -16,9 +16,9 @@ def extract_data(filename, include_metadata = True, log_y=False):
     return (X, Y)
 
 class DataSet:
-	def __init__(self, filename, include_metadata=True):
+	def __init__(self, filename, include_metadata=True, log_y=False):
 		print "Loading data from : ", filename
-		self._x, self._y = extract_data(filename, include_metadata)
+		self._x, self._y = extract_data(filename, include_metadata, log_y)
 		self._epochs_completed = 0
 		self._index_in_epoch = 0
 
