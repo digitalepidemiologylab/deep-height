@@ -190,7 +190,7 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True, allow_soft_plac
 
 
         print "epoch : ", epoch, "avg_cost : ", avg_cost
-        if epoch % checkpoint_step == 0 :
-            print "Saving checkpoint...."
-            saver.save(sess, CHECKPOINTS + '/model.ckpt', epoch)
-            print "Checkpoint saved...."
+        # if epoch % checkpoint_step == 0 :
+        #     print "Saving checkpoint...."
+        #     saver.save(sess, CHECKPOINTS + '/model.ckpt', epoch)
+        #     print "Checkpoint saved...."
