@@ -2,14 +2,17 @@
 import deepdish as dd
 import numpy as np
 
-def extract_data(filename, include_metadata = True):
+def extract_data(filename, include_metadata = True, log_y=False):
     data = dd.io.load(filename)
     if include_metadata:
         X = data['X']/2
     else:
         X = data['X'][0:,3:]/2
-    # Y = np.log(data['Y'])
-    Y = data['Y']
+
+    if log_y:
+        Y = np.log(data['Y'])
+    else:
+        Y = data['Y']
     return (X, Y)
 
 class DataSet:
@@ -64,8 +67,8 @@ class DataSet:
 		_d = {'X': self._x[:size], 'Y': self._y[:size]}
 		dd.io.save(target_filename, _d)
 
-def load_data(foldername, small=False, include_metadata=True):
+def load_data(foldername, small=False, include_metadata=True, log_y=False):
 	if not small:
-		return (DataSet(foldername+"/train.h5", include_metadata), DataSet(foldername+"/test.h5", include_metadata))
+		return (DataSet(foldername+"/train.h5", include_metadata, log_y), DataSet(foldername+"/test.h5", include_metadata, log_y))
 	else:
-		return (DataSet(foldername+"/train-small.h5", include_metadata), DataSet(foldername+"/test-small.h5", include_metadata))
+		return (DataSet(foldername+"/train-small.h5", include_metadata, log_y), DataSet(foldername+"/test-small.h5", include_metadata, log_y))
