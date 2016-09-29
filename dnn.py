@@ -184,7 +184,7 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True, allow_soft_plac
             # Compute average loss
             avg_cost += c / total_batch
             if LOG_Y:
-                print "Cost : ", c, "Logg-ed-Prediction : ", prediction, "Transformed Prediction : ", np.exp(prediction), " Actual : ", batch_y
+                print "Cost : ", c, "Logg-ed-Prediction : ", prediction, "Transformed Prediction : ", np.exp(prediction), " Actual : ", batch_y, "Transformed Actual : ", np.exp(batch_y)
             else:
                 print "Cost : ", c, "Prediction : ", prediction, "Actual : ", batch_y
 
