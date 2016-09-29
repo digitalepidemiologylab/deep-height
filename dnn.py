@@ -20,12 +20,12 @@ Hyperparameters
 training_epochs = 150
 batch_size = 1
 
-dropout = 1
+dropout = 0.5
 
-filt_1 = [50, 1000, 10]  #Configuration for conv1 in [num_filt,kern_size,pool_stride]
-filt_2 = [30, 1000, 10]
-filt_3 = [30, 1000, 10]
-filt_4 = [30, 1000, 10]
+filt_1 = [50, 100, 5]  #Configuration for conv1 in [num_filt,kern_size,pool_stride]
+filt_2 = [30, 100, 5]
+filt_3 = [30, 100, 5]
+filt_4 = [30, 100, 5]
 
 num_fc_1 = 1000
 num_fc_2 = 1000
@@ -155,25 +155,28 @@ with tf.name_scope("Loss"):
 with tf.name_scope("train") as scope:
     tvars = tf.trainable_variables()
     grads = tf.gradients(cost, tvars)
-    optimizer = tf.train.AdamOptimizer(learning_rate)
+    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
+
     gradients = zip(grads, tvars)
-    train_step = optimizer.apply_gradients(gradients)
 
-    # numel = tf.constant([[0]])
-    # for gradient, variable in gradients:
-    #     if isinstance(gradient, ops.IndexedSlices):
-    #         grad_values = gradient.values
-    #     else:
-    #         grad_values = gradient
-    #     numel +=tf.reduce_sum(tf.size(variable))
+    numel = tf.constant([[0]])
+    for gradient, variable in gradients:
+        if isinstance(gradient, ops.IndexedSlices):
+            grad_values = gradient.values
+        else:
+            grad_values = gradient
+        numel +=tf.reduce_sum(tf.size(variable))
 
-    #h1 = tf.histogram_summary(variable.name, variable)
-    #h2 = tf.histogram_summary(variable.name + "/gradients", grad_values)
-    #h3 = tf.histogram_summary(variable.name + "/gradient_norm", clip_ops.global_norm([grad_values]))
+    h1 = tf.histogram_summary(variable.name, variable)
+    h2 = tf.histogram_summary(variable.name + "/gradients", grad_values)
+    h3 = tf.histogram_summary(variable.name + "/gradient_norm", clip_ops.global_norm([grad_values]))
 
 # Create a summary to monitor cost tensor
 tf.scalar_summary("loss", cost)
 merged_summary_op = tf.merge_all_summaries()
+
+saver = tf.train.Saver()
+
 config=tf.ConfigProto(log_device_placement=True, allow_soft_placement=True)
 with tf.Session(config=config) as sess:
     ckpt = tf.train.get_checkpoint_state(CHECKPOINTS)
@@ -207,7 +210,7 @@ with tf.Session(config=config) as sess:
             avg_cost += c / total_batch
 
         print "epoch : ", epoch, "avg_cost : ", avg_cost
-    if epoch % checkpoint_step == 0 :
-        print "Saving checkpoint...."
-        saver.save(sess, CHECKPOINTS + '/model.ckpt', epoch)
-        print "Checkpoint saved...."
+        # if epoch % checkpoint_step == 0 :
+        #     print "Saving checkpoint...."
+        #     saver.save(sess, CHECKPOINTS + '/model.ckpt', epoch)
+        #     print "Checkpoint saved...."
