@@ -9,8 +9,9 @@ from bnf import *
 import os
 
 import open_snp_data
+LOG_Y = False
 
-train, test = open_snp_data.load_data("opensnp_data/", small=False)
+train, test = open_snp_data.load_data("opensnp_data/", small=False, log_y=LOG_Y)
 
 input_dims = len(train.snps[0])
 
@@ -178,7 +179,11 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True, allow_soft_plac
             writer.add_summary(summary, epoch * total_batch + i)
             # Compute average loss
             avg_cost += c / total_batch
-            print "Cost : ", c, "Prediction : ", prediction, "Actual : ", batch_y
+            if LOG_Y:
+                print "Cost : ", c, "Logg-ed-Prediction : ", prediction, "Transformed Prediction : ", np.exp(prediction), " Actual : ", batch_y
+            else:
+                print "Cost : ", c, "Prediction : ", prediction, "Actual : ", batch_y
+
 
         print "epoch : ", epoch, "avg_cost : ", avg_cost
         if epoch % checkpoint_step == 0 :
