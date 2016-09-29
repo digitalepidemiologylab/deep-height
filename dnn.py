@@ -153,7 +153,7 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True, allow_soft_plac
     if ckpt and ckpt.model_checkpoint_path:
         saver.restore(sess, ckpt.model_checkpoint_path)
         epoch_n = int(ckpt.model_checkpoint_path.split('-')[1])
-        i_iter = (epoch_n+1) * (train.num_examples/batch_size)
+        i_iter = (epoch_n) * (train.num_examples/batch_size)
         print "Restored Epoch ", epoch_n
     else:
         if not os.path.exists(CHECKPOINTS):
@@ -165,7 +165,7 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True, allow_soft_plac
     writer = tf.train.SummaryWriter(LOGDIR, sess.graph_def)
 
     # Training cycle
-    for epoch in range(epoch_n+1, training_epochs):
+    for epoch in range(epoch_n, training_epochs):
         avg_cost = 0.
         total_batch = int(train.num_examples/batch_size)
         # Loop over all batches
