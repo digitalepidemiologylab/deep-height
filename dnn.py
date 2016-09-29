@@ -17,7 +17,7 @@ import open_snp_data
 LOG_Y = False
 INCLUDE_METADATA = True
 
-train, test = open_snp_data.load_data("opensnp_data/", small=True, include_metadata=INCLUDE_METADATA, log_y=LOG_Y)
+train, test = open_snp_data.load_data("opensnp_data/", small=False, include_metadata=INCLUDE_METADATA, log_y=LOG_Y)
 
 input_dims = len(train.snps[0])
 
