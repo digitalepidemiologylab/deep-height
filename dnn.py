@@ -7,11 +7,17 @@ from tensorflow.python.ops import clip_ops
 from bnf import *
 
 import os
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.pyplot as plt
+import seaborn as sns
+
 
 import open_snp_data
-LOG_Y = True
+LOG_Y = False
+INCLUDE_METADATA = True
 
-train, test = open_snp_data.load_data("opensnp_data/", small=False, log_y=LOG_Y)
+train, test = open_snp_data.load_data("opensnp_data/", small=True, include_metadata=INCLUDE_METADATA, log_y=LOG_Y)
 
 input_dims = len(train.snps[0])
 
@@ -173,6 +179,11 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True, allow_soft_plac
     for epoch in range(epoch_n, training_epochs):
         avg_cost = 0.
         total_batch = int(train.num_examples/batch_size)
+        train_actual = []
+        train_predicted = []
+        if INCLUDE_METADATA == True:
+            train_gender = []
+
         # Loop over all batches
         for i in range(total_batch):
             batch_x, batch_y = train.next_batch(batch_size)
@@ -185,10 +196,41 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True, allow_soft_plac
             avg_cost += c / total_batch
             if LOG_Y:
                 print "Cost : ", c, "Logg-ed-Prediction : ", prediction, "Transformed Prediction : ", np.exp(prediction), " Actual : ", batch_y, "Transformed Actual : ", np.exp(batch_y)
+                train_actual.append(np.exp(batch_y)[0])
+                train_predicted.append(np.exp(prediction)[0][0])
             else:
                 print "Cost : ", c, "Prediction : ", prediction, "Actual : ", batch_y
+                train_actual.append(batch_y[0])
+                train_predicted.append(prediction[0][0])
 
+            if INCLUDE_METADATA == True:
+                train_gender.append(batch_x[0][1]%2)
 
+        ##Plot scatter plot for training set
+        print "Plotting train-predictions scatter plot for Epoch : ", epoch
+        plt.clf()
+        if INCLUDE_METADATA == True:
+            #Handle case of Gender coloring
+            blue_actual = []
+            blue_predicted = []
+            red_actual = []
+            red_predicted = []
+            for idx, k in enumerate(train_gender):
+                if train_gender == 0:
+                    blue_actual.append(train_actual[idx])
+                    blue_predicted.append(train_predicted[idx])
+                else:
+                    red_actual.append(train_actual[idx])
+                    red_predicted.append(train_predicted[idx])
+
+            plt.scatter(blue_actual, blue_predicted, color='b')
+            plt.scatter(red_actual, red_predicted, color='r')
+        else:
+            plt.scatter(train_actual, train_predicted)
+
+        plt.xlabel("Actual Heights")
+        plt.ylabel("Predicted Heights")
+        plt.savefig(CHECKPOINTS+"/train-scatter-"+str(epoch)+".png")
         print "epoch : ", epoch, "avg_cost : ", avg_cost
         # if epoch % checkpoint_step == 0 :
         #     print "Saving checkpoint...."
