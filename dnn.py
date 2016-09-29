@@ -10,7 +10,7 @@ import os
 
 import open_snp_data
 
-train, test = open_snp_data.load_data("opensnp_data/", small=True)
+train, test = open_snp_data.load_data("opensnp_data/", small=False)
 
 input_dims = len(train.snps[0])
 
@@ -20,13 +20,13 @@ Hyperparameters
 training_epochs = 100
 batch_size = 1
 
-dropout = 0.9
+dropout = 1
 
-filt_1 = [5, 1000, 10]  #Configuration for conv1 in [num_filt,kern_size,pool_stride]
-filt_2 = [3, 1000, 10]
+filt_1 = [20, 1000, 10]  #Configuration for conv1 in [num_filt,kern_size,pool_stride]
+filt_2 = [20, 1000, 10]
 
-num_fc_1 = 10
-num_fc_2 = 10
+num_fc_1 = 200
+num_fc_2 = 200
 
 learning_rate = 1e-2
 
@@ -128,7 +128,6 @@ with tf.name_scope("train") as scope:
     optimizer = tf.train.AdamOptimizer(learning_rate)
     train_op = optimizer.minimize(cost)
     # gradients = zip(grads, tvars)
-    # train_step = optimizer.apply_gradients(gradients)
 
     # numel = tf.constant([[0]])
     # for gradient, variable in gradients:
@@ -137,10 +136,10 @@ with tf.name_scope("train") as scope:
     #     else:
     #         grad_values = gradient
     #     numel +=tf.reduce_sum(tf.size(variable))
-
-    #h1 = tf.histogram_summary(variable.name, variable)
-    #h2 = tf.histogram_summary(variable.name + "/gradients", grad_values)
-    #h3 = tf.histogram_summary(variable.name + "/gradient_norm", clip_ops.global_norm([grad_values]))
+    #
+    #     h1 = tf.histogram_summary(variable.name, variable)
+    #     h2 = tf.histogram_summary(variable.name + "/gradients", grad_values)
+    #     h3 = tf.histogram_summary(variable.name + "/gradient_norm", clip_ops.global_norm([grad_values]))
 
 # Create a summary to monitor cost tensor
 tf.scalar_summary("loss", cost)
@@ -179,7 +178,7 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True, allow_soft_plac
             writer.add_summary(summary, epoch * total_batch + i)
             # Compute average loss
             avg_cost += c / total_batch
-            print "Cost : ", c, "Prediction : ", prediction
+            print "Cost : ", c, "Prediction : ", prediction, "Actual : ", batch_y
 
         print "epoch : ", epoch, "avg_cost : ", avg_cost
         if epoch % checkpoint_step == 0 :
