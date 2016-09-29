@@ -216,7 +216,7 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True, allow_soft_plac
             red_actual = []
             red_predicted = []
             for idx, k in enumerate(train_gender):
-                if train_gender == 0:
+                if train_gender[idx] == 0:
                     blue_actual.append(train_actual[idx])
                     blue_predicted.append(train_predicted[idx])
                 else:
