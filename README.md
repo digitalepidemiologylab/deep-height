@@ -7,9 +7,9 @@
 python preprocess.py
 #TO-DO: Add CLI arguments later
 
-python dnn.py
+python train.py
 
-tensorboard --logdir logdir_conv 
+tensorboard --logdir logdir/dropout-0.5
 
 ```
 
