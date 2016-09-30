@@ -91,10 +91,6 @@ def buildCNN(x, y_, input_dims, learning_rate, bn_train, keep_prob, batch_size, 
         cost = tf.reduce_sum(tf.pow(pred-y_, 2))/(2*batch_size)
 
     with tf.name_scope("train") as scope:
-        # tvars = tf.trainable_variables()
-        # grads = tf.gradients(cost, tvars)
-        optimizer = tf.train.AdamOptimizer(learning_rate).minimize(cost)
-
         optimizer = tf.train.AdamOptimizer(learning_rate)
         train_op = optimizer.minimize(cost)
         _realtime_learning_rate = optimizer._lr_t
