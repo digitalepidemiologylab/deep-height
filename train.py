@@ -58,11 +58,15 @@ y_ = tf.placeholder("float", shape=[None], name = 'height')
 """
 Build CNN
 """
-dropout = 1
+dropout = 0.5
+_learning_rate = 1e-1
+decay = 0.2
+learning_rate = tf.placeholder(tf.float32, shape=[])
 bn_train = tf.placeholder(tf.bool)          #Boolean value to guide batchnorm
 keep_prob = tf.placeholder("float", name = 'dropout_keep_prob')
 preds, cost, train_op =     cnn.buildCNN(   x, y_,
                                         input_dims,
+                                        learning_rate,
                                         bn_train,
                                         keep_prob,
                                         batch_size,
@@ -101,12 +105,16 @@ with tf.Session(config=config) as sess:
         if INCLUDE_METADATA == True:
             train_gender = []
 
+        e_learning_rate = _learning_rate * 1 / (1 + decay * ((epoch*1.0/training_epochs) * 100))
         # Loop over all batches
         for i in range(total_batch):
             batch_x, batch_y = train.next_batch(batch_size)
             # Run optimization op (backprop) and cost op (to get loss value)
             _, c, summary, prediction = sess.run(   [train_op, cost, merged_summary_op, preds],
-                                        feed_dict={x: batch_x, y_: batch_y, bn_train: True, keep_prob: dropout}
+                                        feed_dict={ x: batch_x, y_: batch_y,
+                                                    bn_train: True,
+                                                    keep_prob: dropout,
+                                                    learning_rate: e_learning_rate}
                                     )
             writer.add_summary(summary, epoch * total_batch + i)
             # Compute average loss
@@ -149,6 +157,7 @@ with tf.Session(config=config) as sess:
         plt.ylabel("Predicted Heights")
         plt.savefig(LOGDIR+"/train-scatter-"+str(epoch)+".png")
         print "epoch : ", epoch, "avg_cost : ", avg_cost
+        print "Learning Rate : ", e_learning_rate
         if checkpoint_step and (epoch % checkpoint_step == 0) :
             print "Saving checkpoint...."
             saver.save(sess, CHECKPOINTS + '/model.ckpt', epoch)
