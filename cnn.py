@@ -9,13 +9,12 @@ def buildCNN(x, y_, input_dims, bn_train, keep_prob, batch_size, training_epochs
     """
     Hyperparameters
     """
-    filt_1 = [20, 1000, 10]  #Configuration for conv1 in [num_filt,kern_size,pool_stride]
-    filt_2 = [20, 1000, 10]
-
-    num_fc_1 = 200
-    num_fc_2 = 200
-
     learning_rate = 1e-2
+    filters = [
+        [20, 1000, 10], #Configuration for conv1 in [num_filt,kern_size,pool_stride]
+        [20, 1000, 10]
+    ]
+    fc_layers = [200, 200, batch_size]
 
     def weight_variable(shape, name):
         with tf.device("/cpu:0"):
@@ -36,68 +35,57 @@ def buildCNN(x, y_, input_dims, bn_train, keep_prob, batch_size, training_epochs
     """
     Build the graph
     """
-    with tf.name_scope("Conv1") as scope:
-      W_conv1 = weight_variable([filt_1[1], 1, 1, filt_1[0]], 'Conv_Layer_1')
-      b_conv1 = bias_variable([filt_1[0]], 'bias_for_Conv_Layer_1')
-      a_conv1 = conv2d(x_image, W_conv1) + b_conv1
-      h_conv1 = tf.nn.tanh(a_conv1)
+    _input = x_image
+    _previous_filter_0 = 1
+    _previous_widthpool = input_dims
+    for _idx, _filter in enumerate(filters):
+        with tf.name_scope("Conv_"+str(_idx+1)) as scope:
+            W_conv = weight_variable([_filter[1], 1, _previous_filter_0, _filter[0]], 'Conv_Layer_'+str(_idx+1))
+            b_conv = bias_variable([_filter[0]], 'bias_for_Conv_Layer_'+str(_idx+1))
+            a_conv = conv2d(_input, W_conv) + b_conv
+            h_conv = a_conv
+            h_conv = tf.nn.tanh(a_conv)
 
+        with tf.name_scope('max_pool'+str(_idx+1)) as scope:
+            h_pool = tf.nn.max_pool(h_conv, ksize=[1, _filter[2], 1, 1],
+                                strides=[1, _filter[2], 1, 1], padding='VALID')
+                                #width is now (128-4)/2+1
+            width_pool = int(np.floor((_previous_widthpool-_filter[2])/_filter[2]))+1
+            size2 = tf.shape(h_pool)       #Debugging purposes
 
-    with tf.name_scope('max_pool1') as scope:
-        h_pool1 = tf.nn.max_pool(h_conv1, ksize=[1, filt_1[2], 1, 1],
-                            strides=[1, filt_1[2], 1, 1], padding='VALID')
-                            #width is now (128-4)/2+1
-        width_pool1 = int(np.floor((input_dims-filt_1[2])/filt_1[2]))+1
-        size1 = tf.shape(h_pool1)       #Debugging purposes
+        _previous_widthpool = width_pool
+        _previous_filter_0 = _filter[0]
+        _input = h_pool
+        _input_size = _previous_widthpool*_previous_filter_0
 
-
-    with tf.name_scope("Conv2") as scope:
-      W_conv2 = weight_variable([filt_2[1], 1, filt_1[0], filt_2[0]], 'Conv_Layer_2')
-      b_conv2 = bias_variable([filt_2[0]], 'bias_for_Conv_Layer_2')
-      a_conv2 = conv2d(h_pool1, W_conv2) + b_conv2
-      h_conv2 = a_conv2
-      h_conv2 = tf.nn.tanh(a_conv2)
-
-    with tf.name_scope('max_pool2') as scope:
-        h_pool2 = tf.nn.max_pool(h_conv2, ksize=[1, filt_2[2], 1, 1],
-                            strides=[1, filt_2[2], 1, 1], padding='VALID')
-                            #width is now (128-4)/2+1
-        width_pool2 = int(np.floor((width_pool1-filt_2[2])/filt_2[2]))+1
-        size2 = tf.shape(h_pool2)       #Debugging purposes
-
-    with tf.name_scope('Batch_norm1') as scope:
-        a_bn1 = batch_norm(h_pool2,filt_2[0],bn_train,'bn2')
+    with tf.name_scope('Batch_norm') as scope:
+        a_bn1 = batch_norm(_input,_previous_filter_0,bn_train,'bn2')
         h_bn1 = tf.nn.tanh(a_bn1)
+        _input = h_bn1
 
+    for _idx, num_fc in enumerate(fc_layers):
+        with tf.name_scope("Fully_Connected-"+str(_idx+1)) as scope:
+            # Now we proces the final information with a fully connected layer. We convert
+            # both activations over all channels into one 1D tensor per sample.
+            # We have "filt_2[0]" channels and "width_pool2" activations per channel.
+            # Hence we use "width_pool2*filt_2[0]" i this first line
+            if _idx == 0:
+                _input_drop = _input
+            else:
+                _input_drop = tf.nn.dropout(_input, keep_prob)
 
-    with tf.name_scope("Fully_Connected1") as scope:
-    # Now we proces the final information with a fully connected layer. We convert
-    # both activations over all channels into one 1D tensor per sample.
-    # We have "filt_2[0]" channels and "width_pool2" activations per channel.
-    # Hence we use "width_pool2*filt_2[0]" i this first line
-      W_fc1 = weight_variable([width_pool2*filt_2[0], num_fc_1], 'Fully_Connected_layer_1')
-      b_fc1 = bias_variable([num_fc_1], 'bias_for_Fully_Connected_Layer_1')
-      h_flat = tf.reshape(h_bn1, [-1, width_pool2*filt_2[0]])
-      h_flat = tf.nn.dropout(h_flat,keep_prob)
-      h_fc1 = tf.nn.tanh(tf.matmul(h_flat, W_fc1) + b_fc1)
+            W_fc = weight_variable([_input_size, num_fc], 'Fully_Connected_layer_'+str(_idx+1))
+            b_fc = bias_variable([num_fc], 'bias_for_Fully_Connected_Layer_'+str(_idx+1))
+            h_flat = tf.reshape(_input_drop, [-1, _input_size])
+            h_flat = tf.nn.dropout(h_flat,keep_prob)
+            h_fc = tf.nn.tanh(tf.matmul(h_flat, W_fc) + b_fc)
+            _input = h_fc
+            _input_size = num_fc
 
-    with tf.name_scope("Fully_Connected2") as scope:
-        h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
-        W_fc2 = tf.Variable(tf.truncated_normal([num_fc_1, num_fc_2], stddev=0.1),name = 'W_fc2')
-        b_fc2 = tf.Variable(tf.constant(0.1, shape=[num_fc_2]),name = 'b_fc2')
-        h_fc2 = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
-        size3 = tf.shape(h_fc2)       #Debugging purposes
-
-    with tf.name_scope("Output_layer") as scope:
-        h_fc2_drop = tf.nn.dropout(h_fc2, keep_prob)
-        W_fc3 = tf.Variable(tf.truncated_normal([num_fc_2, batch_size], stddev=0.1),name = 'W_fc3')
-        b_fc3 = tf.Variable(tf.constant(0.1, shape=[batch_size]),name = 'b_fc3')
-        h_fc3 = tf.matmul(h_fc2_drop, W_fc3) + b_fc3
-        size3 = tf.shape(h_fc3)       #Debugging purposes
-        pred = h_fc3
+    pred = _input
 
     with tf.name_scope("Loss"):
-        cost = tf.reduce_sum(tf.pow(h_fc3-y_, 2))/(2*batch_size)
+        cost = tf.reduce_sum(tf.pow(pred-y_, 2))/(2*batch_size)
 
     with tf.name_scope("train") as scope:
         # tvars = tf.trainable_variables()
