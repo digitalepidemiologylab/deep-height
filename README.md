@@ -4,12 +4,16 @@
 
 ##Usage:
 ```
-python preprocess.py
-#TO-DO: Add CLI arguments later
+usage: train.py [-h] -n NAME [-m INCLUDE_METADATA] [-l] [-d] [-r]
 
-python train.py
-
-tensorboard --logdir logdir/dropout-0.5
+optional arguments:
+  -h, --help            show this help message and exit
+  -n NAME, --name NAME  Current Run Name
+  -m INCLUDE_METADATA, --include_metadata INCLUDE_METADATA
+                        Include Metadata?
+  -l, --log_y           Move Y to Log Space
+  -d, --debug           Debug Mode
+  -r, --reset_logs      Reset LOGDIR and CHECKPOINTS directory
 
 ```
 

@@ -4,6 +4,9 @@ import tensorflow as tf
 import numpy as np
 
 import os
+import shutil
+import argparse
+
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
@@ -13,17 +16,29 @@ import cnn
 
 import open_snp_data
 
-RUN_NAME = "dropout-0.5"
-DEBUG_MODE = True
-
-LOG_Y = False
-INCLUDE_METADATA = True
-
 LOGDIR = "logdir"
 CHECKPOINTS = "checkpoints"
 
+parser = argparse.ArgumentParser(add_help=True)
+parser.add_argument('-n','--name', help='Current Run Name', required=True)
+parser.add_argument('-m','--include_metadata', help='Include Metadata?', default=True, type=bool)
+parser.add_argument('-l','--log_y', help="Move Y to Log Space", action='store_true')
+parser.add_argument('-d','--debug', help="Debug Mode", action='store_true')
+parser.add_argument('-r','--reset_logs', help="Reset LOGDIR and CHECKPOINTS directories", action='store_true')
+
+args = vars(parser.parse_args())
+
+RUN_NAME = args['name']
+INCLUDE_METADATA = args['include_metadata']
+LOG_Y = args['log_y']
+DEBUG_MODE = args['debug']
+
 LOGDIR += "/"+RUN_NAME
 CHECKPOINTS += "/"+RUN_NAME
+
+if args['reset_logs']:
+    shutil.rmtree(LOGDIR)
+    shutil.rmtree(CHECKPOINTS)
 
 batch_size = 1
 training_epochs = 100
