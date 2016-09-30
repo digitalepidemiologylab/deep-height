@@ -143,6 +143,8 @@ with tf.name_scope("train") as scope:
     # grads = tf.gradients(cost, tvars)
     optimizer = tf.train.AdamOptimizer(learning_rate)
     train_op = optimizer.minimize(cost)
+    _realtime_learning_rate = optimizer._lr_t
+
     # gradients = zip(grads, tvars)
 
     # numel = tf.constant([[0]])
@@ -159,6 +161,8 @@ with tf.name_scope("train") as scope:
 
 # Create a summary to monitor cost tensor
 tf.scalar_summary("loss", cost)
+# Create a summary to monitor learning rate
+tf.scalar_summary("Learning Rate", _realtime_learning_rate)
 
 merged_summary_op = tf.merge_all_summaries()
 saver = tf.train.Saver()
