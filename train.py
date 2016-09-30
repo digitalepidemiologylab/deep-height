@@ -37,8 +37,10 @@ LOGDIR += "/"+RUN_NAME
 CHECKPOINTS += "/"+RUN_NAME
 
 if args['reset_logs']:
-    shutil.rmtree(LOGDIR)
-    shutil.rmtree(CHECKPOINTS)
+    if os.path.exists(LOGDIR):
+        shutil.rmtree(LOGDIR)
+    if os.path.exists(CHECKPOINTS):
+        shutil.rmtree(CHECKPOINTS)
 
 batch_size = 1
 training_epochs = 100
