@@ -21,6 +21,7 @@ CHECKPOINTS = "checkpoints"
 
 parser = argparse.ArgumentParser(add_help=True)
 parser.add_argument('-n','--name', help='Current Run Name', required=True)
+parser.add_argument('-e','--epochs', help='Number of Epochs', type=int, default=100)
 parser.add_argument('-m','--include_metadata', help='Include Metadata?', default=True, type=bool)
 parser.add_argument('-l','--log_y', help="Move Y to Log Space", action='store_true')
 parser.add_argument('-d','--debug', help="Debug Mode", action='store_true')
@@ -43,7 +44,7 @@ if args['reset_logs']:
         shutil.rmtree(CHECKPOINTS)
 
 batch_size = 1
-training_epochs = 100
+training_epochs = args['epochs']
 checkpoint_step = False
 
 
@@ -57,10 +58,10 @@ y_ = tf.placeholder("float", shape=[None], name = 'height')
 """
 Build CNN
 """
-dropout = 0.5
+dropout = 1
 bn_train = tf.placeholder(tf.bool)          #Boolean value to guide batchnorm
 keep_prob = tf.placeholder("float", name = 'dropout_keep_prob')
-preds, cost, train_op = cnn.buildCNN(   x, y_,
+preds, cost, train_op =     cnn.buildCNN(   x, y_,
                                         input_dims,
                                         bn_train,
                                         keep_prob,

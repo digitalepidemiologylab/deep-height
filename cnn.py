@@ -9,10 +9,11 @@ def buildCNN(x, y_, input_dims, bn_train, keep_prob, batch_size, training_epochs
     """
     Hyperparameters
     """
-    learning_rate = 1e-2
+    learning_rate = 1e-1
     filters = [
         [20, 1000, 10], #Configuration for conv1 in [num_filt,kern_size,pool_stride]
-        [20, 1000, 10]
+        [20, 1000, 10],
+        [5, 5000, 10]
     ]
     fc_layers = [200, 200, batch_size]
 
@@ -78,11 +79,14 @@ def buildCNN(x, y_, input_dims, bn_train, keep_prob, batch_size, training_epochs
             b_fc = bias_variable([num_fc], 'bias_for_Fully_Connected_Layer_'+str(_idx+1))
             h_flat = tf.reshape(_input_drop, [-1, _input_size])
             h_flat = tf.nn.dropout(h_flat,keep_prob)
-            h_fc = tf.nn.tanh(tf.matmul(h_flat, W_fc) + b_fc)
-            _input = h_fc
-            _input_size = num_fc
 
-    pred = _input
+            h_fc = tf.matmul(h_flat, W_fc) + b_fc
+            h_fc_tanh = tf.nn.tanh(h_fc)
+            _input = h_fc_tanh
+            _input_size = num_fc
+            _input_unactivated = h_fc
+
+    pred = _input_unactivated
 
     with tf.name_scope("Loss"):
         cost = tf.reduce_sum(tf.pow(pred-y_, 2))/(2*batch_size)
