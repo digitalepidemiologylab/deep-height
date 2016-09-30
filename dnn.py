@@ -14,8 +14,10 @@ import seaborn as sns
 
 
 import open_snp_data
-LOG_Y = False
+LOG_Y = True
 INCLUDE_METADATA = True
+
+RUN_NAME = "dropout-1"
 
 train, test = open_snp_data.load_data("opensnp_data/", small=False, include_metadata=INCLUDE_METADATA, log_y=LOG_Y)
 
@@ -25,8 +27,8 @@ input_dims = len(train.snps[0])
 Hyperparameters
 """
 training_epochs = 100
-batch_size = 1
 
+batch_size = 1
 dropout = 1
 
 filt_1 = [20, 1000, 10]  #Configuration for conv1 in [num_filt,kern_size,pool_stride]
@@ -36,14 +38,17 @@ num_fc_1 = 200
 num_fc_2 = 200
 
 learning_rate = 1e-2
-
 checkpoint_step = 5
+
 if LOG_Y:
     LOGDIR = "logdir_conv_logy"
     CHECKPOINTS = "checkpoints_conv_logy"
 else:
     LOGDIR = "logdir_conv"
     CHECKPOINTS = "checkpoints_conv"
+
+LOGDIR += "/"+RUN_NAME
+CHECKPOINTS += "/"+RUN_NAME
 
 x = tf.placeholder("float", shape=[None, input_dims], name = 'Input_data')
 y_ = tf.placeholder("float", shape=[None], name = 'height')
@@ -154,8 +159,8 @@ with tf.name_scope("train") as scope:
 
 # Create a summary to monitor cost tensor
 tf.scalar_summary("loss", cost)
-merged_summary_op = tf.merge_all_summaries()
 
+merged_summary_op = tf.merge_all_summaries()
 saver = tf.train.Saver()
 
 
