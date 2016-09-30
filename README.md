@@ -6,6 +6,11 @@
 ```
 python preprocess.py
 #TO-DO: Add CLI arguments later
+
+python dnn.py
+
+tensorboard --logdir logdir_conv 
+
 ```
 
 ##Author
