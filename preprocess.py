@@ -12,10 +12,12 @@ import time
 """
 ARGUMENTS
 
-TO-DO: use a proper argument parser for these 
+TO-DO: use a proper argument parser for these
 """
-PATH_TO_INPUT_OPENSNP_DIRECTORY = "/mount/SDG/splitconcatdataset-uncompressed/Genomic_data"
-PATH_TO_OUTPUT_DIRECTORY = "/mount/SDG/deep-height/opensnp_data"
+# PATH_TO_INPUT_OPENSNP_DIRECTORY = "/mount/SDG/splitconcatdataset-uncompressed/Genomic_data"
+PATH_TO_INPUT_OPENSNP_DIRECTORY = "/mount/SDG/gwas_subset"
+# PATH_TO_OUTPUT_DIRECTORY = "/mount/SDG/deep-height/opensnp_data"
+PATH_TO_OUTPUT_DIRECTORY = "/mount/SDG/deep-height/opensnp_data_gwas_subset"
 
 TRAIN_PERCENT = 80
 
@@ -34,13 +36,13 @@ def _process_file(_file):
 	print _file, user_ids
 	assert len(user_ids) == 1 and len(user_ids[0]) == 2 and user_ids[0][0] == user_ids[0][1]
 	user_id = str(user_ids[0][1].strip())
-	
+
 	f = open(_file, "r")
 	lines = f.readlines()
 	"""
 	TO-DO: Make the assertion for expected number of lines configurable
 	"""
-	assert len(lines) == 9520940
+	# assert len(lines) == 9520940
 	data = []
 	for _line in lines:
 		_line = _line.strip().split("/")
@@ -49,9 +51,9 @@ def _process_file(_file):
 		"""
 		TO-DO:
 			The values can technically be packed in just 2bits,
-			so quite some room for improvement here in how to pack 
+			so quite some room for improvement here in how to pack
 			the data more efficiently.
-			Some thought could also go into how to better "organise" 
+			Some thought could also go into how to better "organise"
 			the data (or exploit some domain specific correlations between them).
 		"""
 		data += [int(_line[0]), int(_line[1])]
@@ -62,7 +64,7 @@ def _process_file(_file):
 	"""
 	return {user_id: {'data': data}}
 
-#Queue worker		
+#Queue worker
 def _worker(files, done_queue):
 	for _file in files:
 		try:
@@ -76,11 +78,11 @@ def _worker(files, done_queue):
 			f.write("="*100+"\n")
 			f.close()
 			done_queue.put(False)
-	return	
+	return
 
 if __name__ == '__main__':
 	#Queue handler
-	done_queue = multiprocessing.Queue() 
+	done_queue = multiprocessing.Queue()
 	chunksize = int(math.ceil(len(snp_files)/float(NUMBER_OF_PROCESSES)))
 	procs = []
 
@@ -97,7 +99,7 @@ if __name__ == '__main__':
 
 	"""
 	This section needs some cleanup. A bit too hacky right now.
-	"""	
+	"""
 	#
 	# Wait for all worker processes to finish
 	# for p in procs:
@@ -114,13 +116,13 @@ if __name__ == '__main__':
 			print "ERROR in a particular file"
 	#
 	# Ideally we shouldnt have manual termination of the processes
-	# But the darn processes simply wont terminate for reason with 
+	# But the darn processes simply wont terminate for reason with
 	# p.join :'(
 	#
 	# TO-DO: Fix this
 	for _process in procs:
 		_process.terminate()
-	
+
 	while True:
 		if any(p.is_alive() for p in procs):
 			time.sleep(0.5)
@@ -137,7 +139,7 @@ if __name__ == '__main__':
 			train_d[_key] = data_d[_key]
 		else:
 			test_d[_key] = data_d[_key]
-			
+
 	print "Number of Training Keys : ",len(train_d.keys())
 	print "Number of testing keys : ", len(test_d.keys())
 
@@ -153,7 +155,7 @@ if __name__ == '__main__':
 	height_index = HEADERS.index("HEIGHT")
 
 	all_users = train_d.keys() + test_d.keys()
-	
+
 	TRAIN_X = []
 	TRAIN_Y = []
 
@@ -172,14 +174,14 @@ if __name__ == '__main__':
 						continue
 
 					"""
-						Compute Approximate Age from the BORN age, 
+						Compute Approximate Age from the BORN age,
 						mostly to fit the number in np.uint8
 					"""
 					if _head == "BORN":
 						_line[_idx] = 2016 - int(_line[_idx])
 
 					meta += [int(_line[_idx])]
-				
+
 				if str(_line[id_index]) in train_d.keys():
 					train_d[str(_line[id_index])]['data'] = meta + train_d[str(_line[id_index])]['data']
 					TRAIN_X.append(train_d[str(_line[id_index])]['data'])
@@ -193,9 +195,9 @@ if __name__ == '__main__':
 	print "Length TEST_Y : ", len(TEST_Y)
 	print "Length TRAIN_X : ", len(TRAIN_X)
 	print "Length TRAIN_Y : ", len(TRAIN_Y)
-	
+
 	"""
-	Shuffle and write data to train/test files 
+	Shuffle and write data to train/test files
 	"""
 	print "Writing data to the output folder...."
 	dd.io.save(PATH_TO_OUTPUT_DIRECTORY+"/train.h5", {	'X': np.array(TRAIN_X, dtype=np.uint8),
@@ -205,5 +207,3 @@ if __name__ == '__main__':
 	dd.io.save(PATH_TO_OUTPUT_DIRECTORY+"/test.h5", {	'X': np.array(TEST_X, dtype=np.uint8),
 								'Y': np.array(TEST_Y, dtype=np.uint8)
 							})
-		
-
