@@ -6,21 +6,27 @@ import numpy as np
 import open_snp_data
 import os
 
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+
 LOG_DIR = "./logdir"
 
-train, test = open_snp_data.load_data("opensnp_data/", small=False, include_metadata=False)
+train, test = open_snp_data.load_data("opensnp_data_gwas_subset/", small=False, include_metadata=True)
 
 input_dims = len(train.snps[0])
 
 learning_rate = 0.001
-training_epochs = 50
+training_epochs = 1
 batch_size = 1
 display_step = 1
 checkpoint_step = 5
-DETAILED_VISUALIZATION = False
+DETAILED_VISUALIZATION = True
 
-n_hidden_1 = 20
-n_hidden_2 = 20
+n_hidden_1 = 1024
+n_hidden_2 = 1024
 
 n_input = input_dims
 
@@ -53,17 +59,17 @@ def multilayer_perceptron(x, weights, biases):
     return out_layer
 
 # Store layers weight & bias
-with tf.device("/cpu:0"):
-		weights = {
-			'h1': tf.Variable(tf.random_normal([n_input, n_hidden_1])),
-			'h2': tf.Variable(tf.random_normal([n_hidden_1, n_hidden_2])),
-			'out': tf.Variable(tf.random_normal([n_hidden_2, batch_size]))
-		}
-		biases = {
-			'b1': tf.Variable(tf.random_normal([n_hidden_1])),
-			'b2': tf.Variable(tf.random_normal([n_hidden_2])),
-			'out': tf.Variable(tf.random_normal([batch_size]))
-		}
+# with tf.device("/cpu:0"):
+weights = {
+	'h1': tf.Variable(tf.random_normal([n_input, n_hidden_1])),
+	'h2': tf.Variable(tf.random_normal([n_hidden_1, n_hidden_2])),
+	'out': tf.Variable(tf.random_normal([n_hidden_2, batch_size]))
+}
+biases = {
+	'b1': tf.Variable(tf.random_normal([n_hidden_1])),
+	'b2': tf.Variable(tf.random_normal([n_hidden_2])),
+	'out': tf.Variable(tf.random_normal([batch_size]))
+}
 
 with tf.name_scope("Model"):
 		pred = multilayer_perceptron(x, weights, biases)
@@ -75,7 +81,7 @@ with tf.name_scope("SGD"):
         optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
         if DETAILED_VISUALIZATION:
             grads = tf.gradients(cost, tf.trainable_variables())
-            grads = list(zip(grads, tf.trainable_variables()))		
+            grads = list(zip(grads, tf.trainable_variables()))
 
 # Create a summary to monitor cost tensor
 tf.scalar_summary("loss", cost)
@@ -112,7 +118,7 @@ with tf.Session() as sess:
         sess.run(init)
 
     summary_writer = tf.train.SummaryWriter(LOG_DIR, tf.get_default_graph())
-    
+
     # Training cycle
     for epoch in range(epoch_n + 1, training_epochs):
         avg_cost = 0.
@@ -121,7 +127,7 @@ with tf.Session() as sess:
         for i in range(total_batch):
             batch_x, batch_y = train.next_batch(batch_size)
             # Run optimization op (backprop) and cost op (to get loss value)
-            _, c, summary = sess.run(	[optimizer, cost, merged_summary_op], 
+            _, c, summary = sess.run(	[optimizer, cost, merged_summary_op],
 										feed_dict={x: batch_x, y: batch_y}
 									)
             summary_writer.add_summary(summary, epoch * total_batch + i)
@@ -134,7 +140,29 @@ with tf.Session() as sess:
         if epoch % checkpoint_step == 0:
             print "Saving checkpoint...."
             saver.save(sess, 'checkpoints/model.ckpt', epoch)
-
     print "Optimization Finished!"
 
+    #Predicting heights
+    M_PREDS = []
+    M_TRUE = []
 
+    F_PREDS = []
+    F_TRUE = []
+
+    total_batch = int(test.num_examples/batch_size)
+    for i in range(total_batch):
+        batch_xs, batch_ys = test.next_batch(batch_size)
+        predictions = sess.run([pred], feed_dict={x: batch_xs, y: batch_ys})
+        print "Predictions : ", predictions
+        print "prediction shape : ", predictions.shape
+        gender = batch_xs[0:, 1]
+        y_pred = predictions[0][0].tolist()
+        y_true = batch_ys.tolist()
+
+        for _idx, _female in enumerate(gender):
+            if _female == True:
+                F_PREDS.append(y_pred[_idx])
+                F_TRUE.append(y_true[_idx])
+            else:
+                M_PREDS.append(y_pred[_idx])
+                M_TRUE.append(y_true[_idx])

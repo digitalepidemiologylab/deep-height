@@ -12,7 +12,6 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-import cnn
 
 import open_snp_data
 
@@ -25,6 +24,7 @@ parser.add_argument('-e','--epochs', help='Number of Epochs', type=int, default=
 parser.add_argument('-m','--include_metadata', help='Include Metadata?', default=True, type=bool)
 parser.add_argument('-l','--log_y', help="Move Y to Log Space", action='store_true')
 parser.add_argument('-d','--debug', help="Debug Mode", action='store_true')
+parser.add_argument('-g','--gwas', help="Train on GWAS Subset", action='store_true')
 parser.add_argument('-r','--reset_logs', help="Reset LOGDIR and CHECKPOINTS directories", action='store_true')
 
 args = vars(parser.parse_args())
@@ -43,12 +43,18 @@ if args['reset_logs']:
     if os.path.exists(CHECKPOINTS):
         shutil.rmtree(CHECKPOINTS)
 
-batch_size = 1
+batch_size = 8
 training_epochs = args['epochs']
-checkpoint_step = False
+checkpoint_step = 10
 
+if args['gwas']:
+    import gwas_cnn as cnn
+    train, test = open_snp_data.load_data("opensnp_data_gwas_subset/", small=DEBUG_MODE, include_metadata=INCLUDE_METADATA, log_y=LOG_Y)
+    print "GWAS Subset Mode...."
+else:
+    import cnn
+    train, test = open_snp_data.load_data("opensnp_data/", small=DEBUG_MODE, include_metadata=INCLUDE_METADATA, log_y=LOG_Y)
 
-train, test = open_snp_data.load_data("opensnp_data/", small=DEBUG_MODE, include_metadata=INCLUDE_METADATA, log_y=LOG_Y)
 
 input_dims = len(train.snps[0])
 
@@ -121,15 +127,18 @@ with tf.Session(config=config) as sess:
             avg_cost += c / total_batch
             if LOG_Y:
                 print "Cost : ", c, "Logg-ed-Prediction : ", prediction, "Transformed Prediction : ", np.exp(prediction), " Actual : ", batch_y, "Transformed Actual : ", np.exp(batch_y)
-                train_actual.append(np.exp(batch_y)[0])
-                train_predicted.append(np.exp(prediction)[0][0])
+                for b in range(batch_size):
+                    train_actual.append(np.exp(batch_y)[b])
+                    train_predicted.append(np.exp(prediction)[b][0])
             else:
                 print "Cost : ", c, "Prediction : ", prediction, "Actual : ", batch_y
-                train_actual.append(batch_y[0])
-                train_predicted.append(prediction[0][0])
+                for b in range(batch_size):
+                    train_actual.append(batch_y[b])
+                    train_predicted.append(prediction[b][0])
 
             if INCLUDE_METADATA == True:
-                train_gender.append(batch_x[0][1]%2)
+                for b in range(batch_size):
+                    train_gender.append(batch_x[b][1]%2)
 
         ##Plot scatter plot for training set
         print "Plotting train-predictions scatter plot for Epoch : ", epoch

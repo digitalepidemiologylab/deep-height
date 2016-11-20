@@ -6,6 +6,8 @@ def extract_data(filename, include_metadata = True, log_y=False):
     data = dd.io.load(filename)
     if include_metadata:
         X = data['X']/2
+        #Also normalise the heights
+        X[0:,0] /= 100
     else:
         X = data['X'][0:,3:]/2
 
