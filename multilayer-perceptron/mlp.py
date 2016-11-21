@@ -45,7 +45,7 @@ model = initialize_nn(input_dims)
 model.fit(train_X, train_Y, nb_epoch=20, batch_size=16)
 score = model.evaluate(test_X, test_Y, batch_size=16)
 
-model.save('train_model.h5')  # creates a HDF5 file 'my_model.h5'
+model.save('regression-data/regression_model.h5')  # creates a HDF5 file 'my_model.h5'
 
 _predictions = model.predict(test_X)
 
