@@ -94,6 +94,13 @@ with tf.Session() as sess:
 plt.clf()
 plt.scatter(M_PREDS, M_TRUE, color='b')
 plt.scatter(F_PREDS, F_TRUE, color='r')
+
+np.save("M_PREDS.npy", M_PREDS)
+np.save("M_TRUE.npy", M_TRUE)
+np.save("F_PREDS.npy", F_PREDS)
+np.save("F_TRUE.npy", F_TRUE)
+
+
 plt.ylabel("Actual Heights")
 plt.xlabel("Predicted Heights")
 plt.savefig("linear-train-scatter.png")

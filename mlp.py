@@ -12,21 +12,21 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
-LOG_DIR = "./logdir"
+LOG_DIR = "./logdir-mlp"
 
 train, test = open_snp_data.load_data("opensnp_data_gwas_subset/", small=False, include_metadata=True)
 
 input_dims = len(train.snps[0])
 
 learning_rate = 0.001
-training_epochs = 1
-batch_size = 1
+training_epochs = 1000
+batch_size = 100
 display_step = 1
 checkpoint_step = 5
 DETAILED_VISUALIZATION = True
 
-n_hidden_1 = 1024
-n_hidden_2 = 1024
+n_hidden_1 = 1000
+n_hidden_2 = 1000
 
 n_input = input_dims
 
@@ -77,7 +77,7 @@ with tf.name_scope("Model"):
 with tf.name_scope("Loss"):
 		cost = tf.reduce_sum(tf.pow(pred-y, 2))/(2*batch_size)
 
-with tf.name_scope("SGD"):
+with tf.name_scope("AdamOptimizer"):
         optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
         if DETAILED_VISUALIZATION:
             grads = tf.gradients(cost, tf.trainable_variables())
@@ -152,17 +152,32 @@ with tf.Session() as sess:
     total_batch = int(test.num_examples/batch_size)
     for i in range(total_batch):
         batch_xs, batch_ys = test.next_batch(batch_size)
-        predictions = sess.run([pred], feed_dict={x: batch_xs, y: batch_ys})
-        print "Predictions : ", predictions
-        print "prediction shape : ", predictions.shape
-        gender = batch_xs[0:, 1]
-        y_pred = predictions[0][0].tolist()
-        y_true = batch_ys.tolist()
+        [_predictions] = sess.run([pred], feed_dict={x: batch_xs, y: batch_ys})
+        for predictions in _predictions:
+            print "Predictions : ", predictions
+            print "prediction shape : ", predictions.shape
+            gender = batch_xs[0:, 1]
+            y_pred = predictions.tolist()
+            y_true = batch_ys.tolist()
 
-        for _idx, _female in enumerate(gender):
-            if _female == True:
-                F_PREDS.append(y_pred[_idx])
-                F_TRUE.append(y_true[_idx])
-            else:
-                M_PREDS.append(y_pred[_idx])
-                M_TRUE.append(y_true[_idx])
+            for _idx, _female in enumerate(gender):
+                if _female == True:
+                    F_PREDS.append(y_pred[_idx])
+                    F_TRUE.append(y_true[_idx])
+                else:
+                    M_PREDS.append(y_pred[_idx])
+                    M_TRUE.append(y_true[_idx])
+
+    plt.clf()
+    plt.scatter(M_TRUE, M_PREDS, color='b')
+    plt.scatter(F_TRUE, F_PREDS, color='r')
+
+    np.save("M_PREDS.npy", M_PREDS)
+    np.save("M_TRUE.npy", M_TRUE)
+    np.save("F_PREDS.npy", F_PREDS)
+    np.save("F_TRUE.npy", F_TRUE)
+
+
+    plt.xlabel("Actual Heights")
+    plt.ylabel("Predicted Heights")
+    plt.savefig(LOG_DIR+"/mlp-scatter-"+str(n_hidden_1)+"-"+str(n_hidden_2)+"_e"+str(training_epochs)+".png")
