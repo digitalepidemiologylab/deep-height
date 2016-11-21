@@ -25,9 +25,9 @@ input_dims = len(train.snps[0])
 # Initialize the MLP
 def initialize_nn(frame_size, class_size):
     model = Sequential() # The Keras Sequential model is a linear stack of layers.
-    model.add(Dense(10, init='he_normal', activation='tanh', input_dim=frame_size)) # Dense layer
+    model.add(Dense(100, init='he_normal', activation='tanh', input_dim=frame_size)) # Dense layer
     model.add(Dropout(0.01))
-    model.add(Dense(10, init='he_normal', activation='tanh')) # Another dense layer
+    model.add(Dense(100, init='he_normal', activation='tanh')) # Another dense layer
     model.add(Dropout(0.01))
     model.add(Dense(class_size, activation='softmax')) # Last dense layer with Softmax
 
@@ -76,7 +76,11 @@ np.save("classification-data/TRUE.npy", test_Y)
 np.save("classification-data/TRUE_total.npy", total_Y)
 
 print ""
+print "TOTAL"
 print classification_report(np.argmax(total_Y,axis=1), np.argmax(_predictions_total,axis=1), digits=4)
+
+print "TEST"
+print classification_report(np.argmax(test_Y,axis=1), np.argmax(_predictions_total,axis=1), digits=4)
 
 
 # plt.clf()
